@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Home = () => {
+const Home = ({ addToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,14 +27,8 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (productId) => {
-    console.log(`Product ${productId} added to cart`);
-    // Implement add to cart functionality
-  };
-
-  const handleBuyNow = (productId) => {
-    console.log(`Proceeding to buy product ${productId}`);
-    // Implement buy now functionality
+  const handleAddToCart = (product) => {
+    addToCart(product); // Call addToCart passed as prop
   };
 
   return (
@@ -43,7 +37,6 @@ const Home = () => {
         <h2 className="text-2xl font-bold tracking-tight text-gray-900">List of Products</h2>
 
         {loading && <p>Loading products...</p>}
-
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
@@ -58,12 +51,9 @@ const Home = () => {
                 <div className="mt-4 flex justify-between">
                   <div>
                     <h3 className="text-sm text-gray-700">
-                      <button
-                        onClick={() => handleBuyNow(product.id)}
-                        className="text-blue-500 hover:underline"
-                      >
+                      <span className="text-blue-500 hover:underline">
                         {product.name || 'Unnamed Product'}
-                      </button>
+                      </span>
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">{product.color || 'No color specified'}</p>
                   </div>
@@ -72,19 +62,12 @@ const Home = () => {
                   </p>
                 </div>
 
-                {/* Add to Cart and Buy Now buttons */}
-                <div className="mt-4 flex justify-between space-x-2">
+                <div className="mt-4">
                   <button
-                    onClick={() => handleAddToCart(product.id)}
+                    onClick={() => handleAddToCart(product)}
                     className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
                   >
                     Add to Cart
-                  </button>
-                  <button
-                    onClick={() => handleBuyNow(product.id)}
-                    className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
-                  >
-                    Buy Now
                   </button>
                 </div>
               </div>
