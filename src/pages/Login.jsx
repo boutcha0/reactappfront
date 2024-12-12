@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [username, setUsername] = useState(''); // Renamed to username for clarity
@@ -64,9 +64,10 @@ const Login = () => {
             />
           </div>
 
+          <Link to={'/register'} className='text-sm mb-4 underline'> Sign Up </Link>
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700"
+            className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 mt-4"
           >
             Log In
           </button>

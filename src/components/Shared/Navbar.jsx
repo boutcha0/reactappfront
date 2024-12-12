@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Cart from '../Cart';
 
-export default function Navbar({ cart }) {
+export default function Navbar({ cart , deleteFromCart }) {
   const location = useLocation();
   const [showComponent, setShowComponent] = useState(false);
 
@@ -19,14 +19,14 @@ export default function Navbar({ cart }) {
   const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
   return (
-    <nav className="bg-gray-800">
+    <nav className="bg-indigo-800">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img
               className="h-8 w-auto"
-              src="https://as2.ftcdn.net/v2/jpg/05/91/62/89/1000_F_591628903_OCdQi73S1c7MRJIi7vBbTsNYNNrHO0Lw.jpg"
+              src="https://favpng.com/png_view/cartoon-supermarket-shopping-cart-flame-decoration-shopping-icon-png/FkVvAWiN"
               alt="SkylarkApp"
             />
           </div>
@@ -72,27 +72,13 @@ export default function Navbar({ cart }) {
               </g>
             </svg>
 
-            {/* Register Button */}
-            <Link
-              to="/register"
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-            >
-              Register
-            </Link>
-
-            {/* Login Button */}
-            <Link
-              to="/login"
-              className="rounded-md border border-gray-300 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-            >
-              Login
-            </Link>
+           
           </div>
         </div>
       </div>
 
       {/* Conditionally Render Cart Component */}
-      {showComponent && <Cart cartItems={cart} />}
+      {showComponent && <Cart cartItems={cart} deleteFromCart={deleteFromCart}/>}
     </nav>
   );
 }

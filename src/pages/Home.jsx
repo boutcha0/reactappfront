@@ -28,7 +28,8 @@ const Home = ({ addToCart }) => {
   }, []);
 
   const handleAddToCart = (product) => {
-    addToCart(product); // Call addToCart passed as prop
+    addToCart(product);
+    alert('Added to card successfully !') // Call addToCart passed as prop
   };
 
   return (
@@ -65,7 +66,7 @@ const Home = ({ addToCart }) => {
                 <div className="mt-4">
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    className="w-full bg-indigo-600  text-white py-2 px-4 rounded-md hover:bg-blue-600"
                   >
                     Add to Cart
                   </button>

@@ -1,10 +1,10 @@
 import React from 'react';
 
-const Cart = ({ cartItems }) => {
+const Cart = ({ cartItems , deleteFromCart }) => {
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6 absolute z-50 w-full bg-red-100 right-0">
       <h2 className="text-3xl font-bold text-gray-900 mb-4">Shopping Cart</h2>
       
       {cartItems.length === 0 ? (
@@ -30,7 +30,7 @@ const Cart = ({ cartItems }) => {
                   <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                   <button
                     className="text-red-600 hover:text-red-800 text-sm"
-                    onClick={() => {/* Handle item removal */}}
+                    onClick={() => deleteFromCart(item.id)}
                   >
                     Remove
                   </button>
