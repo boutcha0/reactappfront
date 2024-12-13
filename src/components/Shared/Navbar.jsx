@@ -6,6 +6,12 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
   const location = useLocation();
   const [showComponent, setShowComponent] = useState(false);
 
+  // Define routes where Navbar should not be shown
+  const hiddenRoutes = ['/login', '/register'];
+
+  // Check if current route should hide the Navbar
+  const shouldHideNavbar = hiddenRoutes.includes(location.pathname);
+
   const handleClick = () => {
     setShowComponent(!showComponent); // Toggle the visibility of the Cart component
   };
@@ -18,14 +24,19 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
 
   const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
+  // If on login or register page, return null to hide the Navbar
+  if (shouldHideNavbar) {
+    return null;
+  }
+
   return (
-    <nav className="bg-yellow-800">
+    <nav className="bg-black text-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img
-              className="h-16 w-16 "
+              className="h-16 w-16"
               src="https://img.freepik.com/premium-vector/clothing-shop-logo-design-apparel-store-sign_500223-500.jpg?w=360"
               alt="SkylarkApp"
             />
@@ -89,7 +100,7 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
       </div>
 
       {/* Conditionally Render Cart Component */}
-      {showComponent && <Cart cartItems={cart} deleteFromCart={deleteFromCart}/>}
+      {showComponent && <Cart cartItems={cart} deleteFromCart={deleteFromCart} />}
     </nav>
   );
 }

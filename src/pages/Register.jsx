@@ -7,6 +7,7 @@ const Register = () => {
     name: "",
     adresse: "",
     email: "",
+    password: "", // Add password field
   });
 
   const [message, setMessage] = useState("");
@@ -23,11 +24,16 @@ const Register = () => {
   // Handle Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.password) {
+      setError("Please enter a password");
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:8080/infos", formData);
+      await axios.post("http://localhost:8080/api/auth/register", formData); // Send password along with other fields
       setMessage("Registration successful!");
       setError(""); // Clear errors
-      setFormData({ name: "", adresse: "", email: "" }); // Reset form
+      setFormData({ name: "", adresse: "", email: "", password: "" }); // Reset form
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred during registration.");
       setMessage("");
@@ -84,6 +90,21 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               className="mt-1 mb-4 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
               required
             />
           </div>

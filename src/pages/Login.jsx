@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/Shared/AuthContext'; // Import the custom hook from AuthContext
 
 const Login = () => {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState(''); // State for password
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth(); // Access login function from context
 
   const email = username.includes('@') ? username : `${username}@skylark.ma`;
 
@@ -16,19 +19,27 @@ const Login = () => {
       return;
     }
 
+    if (!password) {
+      setError('Please enter a password');
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:8080/api/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }), // Send email to backend
+        body: JSON.stringify({ email, password }), // Send email and password to backend
       });
 
       if (response.ok) {
         // Successful login
         setError('');
+        const data = await response.json();
         localStorage.setItem('userEmail', email); // Store email in local storage
+        localStorage.setItem('authToken', data.token); // Store JWT token
+        login(); // Update the auth context state to logged in
         navigate('/'); // Redirect to Home page
       } else {
         // Handle errors from the backend
@@ -59,6 +70,20 @@ const Login = () => {
               required
               className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
               placeholder="Enter your Email"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-600">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
+              placeholder="Enter your Password"
             />
           </div>
 
