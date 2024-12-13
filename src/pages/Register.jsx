@@ -35,12 +35,12 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="w-full max-w-md p-8 bg-white shadow-md rounded-md">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Register</h2>
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Register for Skylark</h2>
 
-        {message && <p className="mb-4 text-green-500">{message}</p>}
-        {error && <p className="mb-4 text-red-500">{error}</p>}
+        {message && <p className="mb-4 text-green-500 text-center">{message}</p>}
+        {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -53,14 +53,14 @@ const Register = () => {
               id="name"
               value={formData.name}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
               required
             />
           </div>
 
           <div>
             <label htmlFor="adresse" className="block text-sm font-medium text-gray-700">
-              Adresse
+              Address
             </label>
             <input
               type="text"
@@ -68,7 +68,7 @@ const Register = () => {
               id="adresse"
               value={formData.adresse}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
               required
             />
           </div>
@@ -83,16 +83,20 @@ const Register = () => {
               id="email"
               value={formData.email}
               onChange={handleChange}
-              className="mt-1 mb-4 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 mb-4 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
               required
             />
           </div>
 
-          <Link to={'/login'} className='text-sm mt-4 underline'> Sign In </Link>
+          <div className="flex justify-between items-center">
+            <Link to={'/login'} className='text-sm underline text-yellow-800'> 
+              Already have an account? Sign In 
+            </Link>
+          </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 mt-4"
+            className="w-full bg-yellow-800 text-white py-2 rounded-md hover:bg-yellow-900 transition duration-300 mt-4"
           >
             Register
           </button>

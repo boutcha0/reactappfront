@@ -9,6 +9,7 @@ import About from './pages/About';
 
 const App = () => {
   const [cart, setCart] = useState([]);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   // Function to add a product to the cart
   const addToCart = (product) => {
@@ -34,14 +35,20 @@ const App = () => {
 
   return (
     <Router>
-      <Navbar cart={cart} deleteFromCart={deleteFromCart} />
+      <Navbar 
+        cart={cart} 
+        deleteFromCart={deleteFromCart} 
+        onContactClick={() => setIsContactOpen(true)}
+      />
+      <Contact 
+        isOpen={isContactOpen} 
+        onClose={() => setIsContactOpen(false)} 
+      />
       <Routes>
         <Route path="/" element={<Home addToCart={addToCart} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
-
       </Routes>
     </Router>
   );

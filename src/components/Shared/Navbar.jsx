@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Cart from '../Cart';
 
-export default function Navbar({ cart , deleteFromCart }) {
+export default function Navbar({ cart, deleteFromCart, onContactClick }) {
   const location = useLocation();
   const [showComponent, setShowComponent] = useState(false);
 
@@ -13,20 +13,20 @@ export default function Navbar({ cart , deleteFromCart }) {
   const navigation = [
     { name: 'Home', href: '/', current: location.pathname === '/' },
     { name: 'About', href: '/about', current: location.pathname === '/about' },
-    { name: 'Contact', href: '/contact', current: location.pathname === '/contact' },
+    { name: 'Contact', onClick: onContactClick, current: false },
   ];
 
   const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
   return (
-    <nav className="bg-indigo-800">
+    <nav className="bg-yellow-800">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img
-              className="h-8 w-auto"
-              src="https://favpng.com/png_view/cartoon-supermarket-shopping-cart-flame-decoration-shopping-icon-png/FkVvAWiN"
+              className="h-16 w-16 "
+              src="https://img.freepik.com/premium-vector/clothing-shop-logo-design-apparel-store-sign_500223-500.jpg?w=360"
               alt="SkylarkApp"
             />
           </div>
@@ -35,19 +35,32 @@ export default function Navbar({ cart , deleteFromCart }) {
           <div className="hidden sm:block">
             <div className="flex space-x-4">
               {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={classNames(
-                    item.current
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                    'rounded-md px-3 py-2 text-sm font-medium'
-                  )}
-                  aria-current={item.current ? 'page' : undefined}
-                >
-                  {item.name}
-                </Link>
+                item.href ? (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={classNames(
+                      item.current
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                      'rounded-md px-3 py-2 text-sm font-medium'
+                    )}
+                    aria-current={item.current ? 'page' : undefined}
+                  >
+                    {item.name}
+                  </Link>
+                ) : (
+                  <button
+                    key={item.name}
+                    onClick={item.onClick}
+                    className={classNames(
+                      'text-gray-300 hover:bg-gray-700 hover:text-white',
+                      'rounded-md px-3 py-2 text-sm font-medium'
+                    )}
+                  >
+                    {item.name}
+                  </button>
+                )
               ))}
             </div>
           </div>
@@ -71,8 +84,6 @@ export default function Navbar({ cart , deleteFromCart }) {
                 />
               </g>
             </svg>
-
-           
           </div>
         </div>
       </div>

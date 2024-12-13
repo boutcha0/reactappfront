@@ -66,7 +66,7 @@ const Home = ({ addToCart }) => {
                 <div className="mt-4">
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="w-full bg-indigo-600  text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    className="w-full bg-yellow-600  text-white py-2 px-4 rounded-md hover:bg-blue-600"
                   >
                     Add to Cart
                   </button>

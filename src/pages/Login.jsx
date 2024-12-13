@@ -1,10 +1,8 @@
-// src/pages/Login.jsx
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [username, setUsername] = useState(''); // Renamed to username for clarity
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -31,7 +29,7 @@ const Login = () => {
         // Successful login
         setError('');
         localStorage.setItem('userEmail', email); // Store email in local storage
-        navigate('/Home'); // Redirect to Home
+        navigate('/'); // Redirect to Home page
       } else {
         // Handle errors from the backend
         const errorData = await response.json();
@@ -45,9 +43,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="bg-white p-8 rounded-md shadow-lg w-full sm:w-96">
-        <h2 className="text-2xl font-semibold text-center text-gray-700">Login</h2>
+        <h2 className="text-2xl font-semibold text-center text-gray-700">Login to Skylark</h2>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         <form onSubmit={handleSubmit} className="mt-6">
           <div className="mb-4">
@@ -55,19 +53,24 @@ const Login = () => {
               Email
             </label>
             <input
-              type="email"
+              type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)} // Update username on change
+              onChange={(e) => setUsername(e.target.value)}
               required
-              className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Enter your Email" // Prompt for the username only
+              className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
+              placeholder="Enter your Email"
             />
           </div>
 
-          <Link to={'/register'} className='text-sm mb-4 underline'> Sign Up </Link>
+          <div className="flex justify-between items-center mb-4">
+            <Link to={'/register'} className='text-sm underline text-yellow-800'> 
+              Sign Up 
+            </Link>
+          </div>
+          
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 mt-4"
+            className="w-full bg-yellow-800 text-white py-2 rounded-md hover:bg-yellow-900 transition duration-300"
           >
             Log In
           </button>
