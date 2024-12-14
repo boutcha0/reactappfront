@@ -102,7 +102,7 @@ const Cart = ({ cartItems, deleteFromCart }) => {
                           </div>
                           <p className="text-sm text-gray-600">Color: {product.color || 'No color specified'}</p>
                           <div className="flex justify-between items-center mt-4">
-                            <p className="text-sm text-gray-600">Qty: {cartItems[index].quantity}</p>
+                            <p className="text-sm text-gray-600">Qty: {cartItems[index]?.quantity}</p>
                             <button
                               className="text-red-600 hover:text-red-800 text-sm font-medium"
                               onClick={() => deleteFromCart(product.id)}

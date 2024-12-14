@@ -67,6 +67,8 @@ const About = () => {
               <span className="bg-gray-100 text-gray-800 px-4 py-2 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-out">React Router</span>
               <span className="bg-gray-100 text-gray-800 px-4 py-2 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-out">Tailwind CSS</span>
               <span className="bg-gray-100 text-gray-800 px-4 py-2 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-out">Axios</span>
+              <span className="bg-gray-100 text-gray-800 px-4 py-2 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-out">SpringBoot</span>
+
             </div>
           </section>
 

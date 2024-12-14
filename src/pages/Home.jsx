@@ -8,6 +8,8 @@ const Home = ({ addToCart }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  
+
   const API_URL = useMemo(() => process.env.REACT_APP_API_URL || 'http://localhost:8080', []);
 
   useEffect(() => {
