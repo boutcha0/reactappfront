@@ -8,8 +8,7 @@ import Contact from './pages/Contact';
 import About from './pages/About';
 import OrdersAdmin from './components/OrdersAdmin';
 import { AuthProvider } from '../src/components/Shared/AuthContext';
-import ProtectedRoute from './ProtectedRoute'; // Make sure to import ProtectedRoute
-
+import ProtectedRoute from './ProtectedRoute'; // 
 const App = () => {
   const [cart, setCart] = useState([]);
   const [isContactOpen, setIsContactOpen] = useState(false);

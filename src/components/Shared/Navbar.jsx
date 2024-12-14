@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cart from '../Cart';
+import { useAuth } from './AuthContext';
 
 export default function Navbar({ cart, deleteFromCart, onContactClick }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showComponent, setShowComponent] = useState(false);
+  const { logout } = useAuth(); // Use the logout method from AuthContext
 
   // Define routes where Navbar should not be shown
   const hiddenRoutes = ['/login', '/register'];
@@ -14,6 +17,34 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
 
   const handleClick = () => {
     setShowComponent(!showComponent); // Toggle the visibility of the Cart component
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      if (token) {
+        const response = await fetch('http://localhost:8080/api/auth/logout', { 
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }); 
+        
+        if (!response.ok) {
+          console.warn('Backend logout failed, but proceeding with local logout');
+        }
+      }
+
+      // Always perform local logout, regardless of backend response
+      logout(); 
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout process encountered an error:', error);
+      logout(); // Fallback local logout
+      navigate('/login');
+    }
   };
 
   const navigation = [
@@ -73,6 +104,14 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
                   </button>
                 )
               ))}
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                Logout
+              </button>
             </div>
           </div>
 

@@ -1,72 +1,67 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../components/Shared/AuthContext'; // Import the custom hook from AuthContext
+import { useAuth } from '../components/Shared/AuthContext';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState(''); // State for password
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth(); // Access login function from context
-
-  const email = username.includes('@') ? username : `${username}@skylark.ma`;
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!password) {
-      setError('Please enter a password');
-      return;
-    }
-
+  
     try {
       const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }), // Send email and password to backend
+        body: JSON.stringify({ 
+          email,  // Changed from username to email
+          password 
+        }),
       });
-
+  
+      // Parse response data
+      const data = await response.json();
+  
       if (response.ok) {
-        // Successful login
-        setError('');
-        const data = await response.json();
-        localStorage.setItem('userEmail', email); // Store email in local storage
-        localStorage.setItem('authToken', data.token); // Store JWT token
-        login(); // Update the auth context state to logged in
-        navigate('/'); // Redirect to Home page
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('authToken', data.token);
+        
+        // Pass full user data to login method
+        login({
+          email: email,
+          // Add any additional user details if available
+        });
+        
+        navigate('/');
       } else {
-        // Handle errors from the backend
-        const errorData = await response.json();
-        setError(errorData.message || 'Login failed');
+        // Use the error message from the server
+        setError(data.message || 'Login failed');
       }
     } catch (err) {
-      // Handle network or unexpected errors
       setError('Something went wrong. Please try again later.');
       console.error(err);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="min-h-screen bg-gradient-to-r from-yellow-100 to-yellow-800 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="bg-white p-8 rounded-md shadow-lg w-full sm:w-96">
         <h2 className="text-2xl font-semibold text-center text-gray-700">Login to Skylark</h2>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         <form onSubmit={handleSubmit} className="mt-6">
           <div className="mb-4">
-            <label htmlFor="username" className="block text-sm font-medium text-gray-600">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-600">
               Email
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"  // Changed to email type
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-600"
               placeholder="Enter your Email"
