@@ -11,9 +11,11 @@ import axios from 'axios';
 // Load your Stripe publishable key
 const stripePromise = loadStripe("pk_test_51QVfcFP5WXi7XkfGk1V7IohDJ1yyojjUVDwjuDra4f2vq7R53LsjMAb1c3yIHcj2ghlhycWjlT41JX7gab2euEwL00jY4szWbn");
 
-const CheckoutForm = ({ totalPrice }) => {
+const CheckoutForm = ({ totalPrice, customerId }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [invoiceUrl, setInvoiceUrl] = useState(null);
+  const [fullName, setFullName] = useState('');
 
   const stripe = useStripe();
   const elements = useElements();
@@ -26,15 +28,17 @@ const CheckoutForm = ({ totalPrice }) => {
     }
 
     setIsProcessing(true);
+    setPaymentStatus(null);
+    setInvoiceUrl(null);
 
     try {
-      // 1. Create Payment Intent on backend
-      const response = await axios.post('http://localhost:8080/api/payments/create-payment-intent', {
+      // 1. Create Payment Intent
+      const paymentIntentResponse = await axios.post('http://localhost:8080/api/payments/create-payment-intent', {
         amount: totalPrice,
         currency: 'usd'
       });
 
-      const clientSecret = response.data;
+      const clientSecret = paymentIntentResponse.data;
 
       // 2. Confirm Payment
       const cardElement = elements.getElement(CardElement);
@@ -43,7 +47,7 @@ const CheckoutForm = ({ totalPrice }) => {
         payment_method: {
           card: cardElement,
           billing_details: {
-            name: event.target.fullName.value
+            name: fullName
           }
         }
       });
@@ -53,8 +57,28 @@ const CheckoutForm = ({ totalPrice }) => {
         console.error(result.error);
       } else {
         if (result.paymentIntent.status === 'succeeded') {
-          setPaymentStatus('Payment successful!');
-          // Handle successful payment (e.g., clear cart, show confirmation)
+          // 3. Generate Invoice
+          try {
+            const invoiceResponse = await axios.post(
+              'http://localhost:8080/api/payments/generate-invoice', 
+              {
+                customerId: customerId, 
+                totalPrice: totalPrice
+              }, 
+              {
+                responseType: 'blob'
+              }
+            );
+
+            // Create a blob URL for the invoice
+            const invoiceBlobUrl = window.URL.createObjectURL(new Blob([invoiceResponse.data]));
+            
+            setPaymentStatus('Payment successful!');
+            setInvoiceUrl(invoiceBlobUrl);
+          } catch (invoiceError) {
+            console.error('Invoice generation failed', invoiceError);
+            setPaymentStatus('Payment successful, but invoice generation failed.');
+          }
         }
       }
     } catch (error) {
@@ -65,15 +89,24 @@ const CheckoutForm = ({ totalPrice }) => {
     setIsProcessing(false);
   };
 
+  const handleDownloadInvoice = () => {
+    if (invoiceUrl) {
+      const link = document.createElement('a');
+      link.href = invoiceUrl;
+      link.setAttribute('download', `invoice-${customerId}-${new Date().toISOString()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white shadow-md rounded px-8 py-6">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white shadow-md rounded">
       <h2 className="text-2xl font-bold mb-4">Payment Details</h2>
-      
-      {/* Total Price Display */}
-      <div className="bg-gray-100 p-4 rounded-lg mb-6 text-center">
-        <p className="text-xl font-bold text-gray-900">
-          Total to Pay: ${totalPrice.toFixed(2)}
-        </p>
+
+      {/* Payment Amount */}
+      <div className="mb-4 p-3 bg-black-100 rounded text-center">
+        <p className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</p>
       </div>
 
       {/* Payment Status */}
@@ -87,47 +120,57 @@ const CheckoutForm = ({ totalPrice }) => {
         </div>
       )}
 
+      {/* Invoice Download Link */}
+      {invoiceUrl && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleDownloadInvoice}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          >
+            Download Invoice
+          </button>
+        </div>
+      )}
+
       {/* Name Input */}
-      <label className="block mb-3">
-        <span className="text-gray-700">Full Name</span>
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-2">Full Name</label>
         <input
           type="text"
-          name="fullName"
-          placeholder="John Doe"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          className="w-full px-3 py-2 border rounded"
           required
         />
-      </label>
+      </div>
 
       {/* Card Details */}
-      <div className="block mb-3">
-        <span className="text-gray-700">Card Details</span>
-        <div className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: "16px",
-                  color: "#32325d",
-                  fontFamily: "Arial, sans-serif",
-                  "::placeholder": {
-                    color: "#a0aec0",
-                  },
-                },
-                invalid: {
-                  color: "#fa755a",
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-2">Card Details</label>
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                '::placeholder': {
+                  color: '#aab7c4',
                 },
               },
-            }}
-          />
-        </div>
+              invalid: {
+                color: '#9e2146',
+              },
+            },
+          }}
+        />
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:ring focus:ring-indigo-300 disabled:opacity-50"
+        disabled={isProcessing || !stripe}
+        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
       >
         {isProcessing ? 'Processing...' : 'Pay Now'}
       </button>
@@ -135,10 +178,13 @@ const CheckoutForm = ({ totalPrice }) => {
   );
 };
 
-const StripePayment = ({ totalPrice }) => {
+const StripePayment = ({ totalPrice, customerId }) => {
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm totalPrice={totalPrice} />
+      <CheckoutForm 
+        totalPrice={totalPrice} 
+        customerId={customerId} 
+      />
     </Elements>
   );
 };
