@@ -70,7 +70,6 @@ const CheckoutForm = ({ totalPrice, customerId }) => {
               }
             );
 
-            // Create a blob URL for the invoice
             const invoiceBlobUrl = window.URL.createObjectURL(new Blob([invoiceResponse.data]));
             
             setPaymentStatus('Payment successful!');
@@ -104,12 +103,11 @@ const CheckoutForm = ({ totalPrice, customerId }) => {
     <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white shadow-md rounded">
       <h2 className="text-2xl font-bold mb-4">Payment Details</h2>
 
-      {/* Payment Amount */}
-      <div className="mb-4 p-3 bg-black-100 rounded text-center">
-        <p className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</p>
-      </div>
+      <div className="w-full bg-gray-800 rounded-lg p-4 text-center shadow-md">
+  <p className="text-2xl font-bold text-white">Total: ${totalPrice.toFixed(2)}</p>
+</div>
 
-      {/* Payment Status */}
+
       {paymentStatus && (
         <div className={`mb-4 p-3 rounded ${
           paymentStatus.includes('successful') 
@@ -120,7 +118,6 @@ const CheckoutForm = ({ totalPrice, customerId }) => {
         </div>
       )}
 
-      {/* Invoice Download Link */}
       {invoiceUrl && (
         <div className="mb-4">
           <button
@@ -133,7 +130,6 @@ const CheckoutForm = ({ totalPrice, customerId }) => {
         </div>
       )}
 
-      {/* Name Input */}
       <div className="mb-4">
         <label className="block text-gray-700 mb-2">Full Name</label>
         <input
@@ -145,7 +141,6 @@ const CheckoutForm = ({ totalPrice, customerId }) => {
         />
       </div>
 
-      {/* Card Details */}
       <div className="mb-4">
         <label className="block text-gray-700 mb-2">Card Details</label>
         <CardElement
@@ -166,7 +161,6 @@ const CheckoutForm = ({ totalPrice, customerId }) => {
         />
       </div>
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={isProcessing || !stripe}

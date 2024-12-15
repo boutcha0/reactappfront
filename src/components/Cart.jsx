@@ -12,11 +12,10 @@ const Cart = ({ cartItems, deleteFromCart }) => {
 
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // Fetch product details by ID when the cart items change
   useEffect(() => {
     const fetchProductDetails = async () => {
-      setLoading(true); // Start loading state
-      setError(null); // Reset previous errors
+      setLoading(true); 
+      setError(null); 
       try {
         const details = await Promise.all(
           cartItems.map(async (item) => {
@@ -30,17 +29,17 @@ const Cart = ({ cartItems, deleteFromCart }) => {
         );
         setProductDetails(details);
       } catch (error) {
-        setError(error.message); // Set the error message
+        setError(error.message); 
         console.error('Error fetching product details:', error);
       } finally {
-        setLoading(false); // End loading state
+        setLoading(false); 
       }
     };
 
     if (cartItems.length > 0) {
       fetchProductDetails();
     } else {
-      setProductDetails([]);  // Clear product details if the cart is empty
+      setProductDetails([]);  
     }
   }, [cartItems, API_URL]);
 
@@ -56,10 +55,10 @@ const Cart = ({ cartItems, deleteFromCart }) => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside); // Listen for outside clicks
+    document.addEventListener('mousedown', handleClickOutside); 
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside); // Clean up event listener
+      document.removeEventListener('mousedown', handleClickOutside); 
     };
   }, []);
 

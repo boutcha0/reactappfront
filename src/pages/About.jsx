@@ -5,7 +5,6 @@ const About = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 ease-out">
-        {/* Header Section */}
         <div className="bg-yellow-800 text-white p-8 text-center rounded-t-lg shadow-lg">
           <h1 className="text-4xl font-bold mb-4 transform hover:scale-105 transition-all duration-300 ease-out">
             Skylark E-Commerce Platform
@@ -13,9 +12,7 @@ const About = () => {
           <p className="text-xl text-yellow-200">Your Ultimate Online Shopping Destination</p>
         </div>
 
-        {/* Main Content */}
         <div className="p-8 space-y-6">
-          {/* Application Overview */}
           <section>
             <h2 className="text-3xl font-semibold text-gray-800 mb-4 border-b-4 border-yellow-600 pb-2">
               Our Application
@@ -27,7 +24,6 @@ const About = () => {
             </p>
           </section>
 
-          {/* Key Features */}
           <section>
             <h2 className="text-3xl font-semibold text-gray-800 mb-4 border-b-4 border-yellow-600 pb-2">
               Key Features
@@ -57,7 +53,6 @@ const About = () => {
             </div>
           </section>
 
-          {/* Technologies */}
           <section>
             <h2 className="text-3xl font-semibold text-gray-800 mb-4 border-b-4 border-yellow-600 pb-2">
               Technologies Used
@@ -72,7 +67,6 @@ const About = () => {
             </div>
           </section>
 
-          {/* Call to Action */}
           <section className="text-center mt-8">
             <Link 
               to="/login"
@@ -83,7 +77,6 @@ const About = () => {
           </section>
         </div>
 
-        {/* Footer */}
         <div className="bg-yellow-800 text-white p-4 text-center">
           <p>&copy; 2024 Skylark E-Commerce. All rights reserved.</p>
         </div>

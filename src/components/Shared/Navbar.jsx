@@ -7,16 +7,14 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showComponent, setShowComponent] = useState(false);
-  const { logout } = useAuth(); // Use the logout method from AuthContext
+  const { logout } = useAuth(); 
 
-  // Define routes where Navbar should not be shown
+  //  Navbar should not be shown
   const hiddenRoutes = ['/login', '/register'];
-
-  // Check if current route should hide the Navbar
   const shouldHideNavbar = hiddenRoutes.includes(location.pathname);
 
   const handleClick = () => {
-    setShowComponent(!showComponent); // Toggle the visibility of the Cart component
+    setShowComponent(!showComponent); 
   };
 
   const handleLogout = async () => {
@@ -68,7 +66,7 @@ export default function Navbar({ cart, deleteFromCart, onContactClick }) {
           <div className="flex items-center">
             <img
               className="h-16 w-16"
-              src="https://img.freepik.com/premium-vector/clothing-shop-logo-design-apparel-store-sign_500223-500.jpg?w=360"
+              src="https://yt3.ggpht.com/a/AATXAJw4KRBkKXAdfcyxff_JqzaYD57r_doVzlKsnA=s900-c-k-c0xffffffff-no-rj-mo"
               alt="SkylarkApp"
             />
           </div>

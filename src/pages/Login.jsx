@@ -49,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-orange-100 to-yellow-800 flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-100">
+    <div className="min-h-screen bg-gradient-to-r from-orange-100 to-gray-300 flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-100">
       <div className="bg-white p-8 rounded-md shadow-lg w-full sm:w-96">
         <h2 className="text-2xl font-semibold text-center text-gray-700">Login to Skylark</h2>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}

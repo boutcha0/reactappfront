@@ -6,10 +6,11 @@ import Register from './pages/Register';
 import Navbar from './components/Shared/Navbar';
 import Contact from './pages/Contact';
 import About from './pages/About';
-import OrdersAdmin from './components/OrdersAdmin';
 import { AuthProvider } from '../src/components/Shared/AuthContext';
 import ProtectedRoute from './ProtectedRoute'; // 
 const App = () => {
+
+  
   const [cart, setCart] = useState([]);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -66,14 +67,7 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/admin/orders" 
-            element={
-              <ProtectedRoute>
-                <OrdersAdmin />
-              </ProtectedRoute>
-            } 
-          />
+          
           {/* Redirect to login if no route matches */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
