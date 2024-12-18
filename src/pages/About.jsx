@@ -69,7 +69,7 @@ const About = () => {
 
           <section className="text-center mt-8">
             <Link 
-              to="/login"
+              to="/"
               className="inline-block bg-yellow-800 text-white px-8 py-3 rounded-lg shadow-2xl transform hover:scale-105 transition-all duration-300 ease-out hover:bg-yellow-900"
             >
               Start Shopping Now

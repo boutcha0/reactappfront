@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import Cart from '../components/Cart';
 
 const Home = ({ addToCart }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  
 
   const API_URL = useMemo(() => process.env.REACT_APP_API_URL || 'http://localhost:8080', []);
 
@@ -33,12 +31,34 @@ const Home = ({ addToCart }) => {
   }, [API_URL]);
 
   const handleImageError = (e) => {
-    e.target.src = '/placeholder.jpg'; // Fallback image on error
+    e.target.src = '/placeholder.jpg';
   };
 
-  const handleAddToCart = (product) => {
-    addToCart(product);
-    toast.success('Added to cart successfully!');
+  const handleAddToCart = async (product) => {
+    try {
+      // Make a POST request to the OrderItem API
+      const response = await fetch(`${API_URL}/api/order-items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: 1, // Default quantity
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add item to cart');
+      }
+
+      const data = await response.json();
+      addToCart(product); // Assuming `addToCart` will handle state update locally
+      toast.success('Added to cart successfully!');
+    } catch (err) {
+      toast.error('Failed to add item to cart');
+      console.error(err);
+    }
   };
 
   return (
@@ -88,6 +108,7 @@ const Home = ({ addToCart }) => {
           )}
         </div>
       </div>
+      <Cart cartItems={products} deleteFromCart={() => {}} /> {/* Pass deleteFromCart function properly */}
     </div>
   );
 };

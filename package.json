@@ -46,6 +46,7 @@
     ]
   },
   "devDependencies": {
+    "babel-preset-react-app": "^10.0.1",
     "webpack": "^5.97.1"
   }
 }
