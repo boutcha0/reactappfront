@@ -30,6 +30,9 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem('userEmail', email);
         localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userId',data.userId);
+
+
         
         // Pass full user data to login method
         login({

@@ -36,24 +36,22 @@ const Home = ({ addToCart }) => {
 
   const handleAddToCart = async (product) => {
     try {
-      // Make a POST request to the OrderItem API
-      const response = await fetch(`${API_URL}/api/order-items`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: product.id,
-          quantity: 1, // Default quantity
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add item to cart');
+      const currentCart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      const existingItem = currentCart.find(item => item.id === product.id);
+      
+      let updatedCart;
+      if (existingItem) {
+        updatedCart = currentCart.map(item => 
+          item.id === product.id 
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        updatedCart = [...currentCart, { ...product, quantity: 1 }];
       }
-
-      const data = await response.json();
-      addToCart(product); // Assuming `addToCart` will handle state update locally
+      
+      localStorage.setItem('cartItems', JSON.stringify(updatedCart));
+      window.dispatchEvent(new Event('cartUpdate'));
       toast.success('Added to cart successfully!');
     } catch (err) {
       toast.error('Failed to add item to cart');

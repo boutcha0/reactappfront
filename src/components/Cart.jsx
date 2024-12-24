@@ -1,142 +1,272 @@
-import React, { useState, useEffect, useRef } from 'react';
-import OrderItem from './Shared/OrderItem';
-import StripePayment from './StripePayment';
+import React, { useState, useEffect, useCallback } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
-const Cart = ({ cartItems, deleteFromCart }) => {
-  const [productDetails, setProductDetails] = useState([]);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [loading, setLoading] = useState(false);
+const Cart = ({ isVisible, onClose }) => {
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const cartRef = useRef(null);
+  const [total, setTotal] = useState(0);
+  const [orderProcessing, setOrderProcessing] = useState(false);
+  
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-  const totalPrice = cartItems.reduce((total, item) => {
-    const productPrice = productDetails.find(product => product.id === item.id)?.price || 0;
-    return total + productPrice * item.quantity;
-  }, 0);
-
-  useEffect(() => {
-    const fetchProductDetails = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const responses = await Promise.all(
-          cartItems.map(item =>
-            fetch(`${API_URL}/api/products/${item.id}`).then(res => {
-              if (!res.ok) throw new Error(`Failed to fetch product with ID: ${item.id}`);
-              return res.json();
-            })
-          )
-        );
-        setProductDetails(responses);
-      } catch (err) {
-        setError(err.message || 'Error fetching product details.');
-        console.error('Fetch Error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (cartItems.length > 0) {
-      fetchProductDetails();
-    } else {
-      setProductDetails([]);
-    }
-  }, [cartItems, API_URL]);
-
-  const handleProceedToCheckout = () => setShowPaymentForm(true);
-
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (cartRef.current && !cartRef.current.contains(event.target)) {
-        setIsVisible(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const deleteItemFromCart = async (id) => {
+  const fetchProductDetails = async (productId) => {
     try {
-      console.log('Attempting to delete order item with ID:', id); // Debug log
-      const response = await fetch(`${API_URL}/api/order-items/by-product/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 404) {
-        setError(`Item with ID ${id} was not found in the database`);
-        return;
-      }
-
+      const response = await fetch(`${API_URL}/api/products/${productId}`);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete the item from the cart');
+        throw new Error('Failed to fetch product details');
       }
-
-      // Successfully deleted - update the UI
-      deleteFromCart(id);
+      return await response.json();
     } catch (error) {
-      setError(error.message || 'Error removing the item from the cart.');
-      console.error('Delete Error:', error);
+      console.error('Error fetching product:', error);
+      throw error;
     }
   };
 
+  const loadCartItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      const storedItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      
+      const itemsWithDetails = await Promise.all(
+        storedItems.map(async (item) => {
+          try {
+            const productDetails = await fetchProductDetails(item.id);
+            return {
+              ...productDetails,
+              quantity: item.quantity
+            };
+          } catch (error) {
+            console.error(`Failed to fetch details for product ${item.id}:`, error);
+            return item;
+          }
+        })
+      );
+
+      setCartItems(itemsWithDetails);
+      calculateTotal(itemsWithDetails);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [API_URL]);
+
+  useEffect(() => {
+    if (isVisible) {
+      loadCartItems();
+    }
+  }, [isVisible, loadCartItems]);
+
+  const calculateTotal = (items) => {
+    const newTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    setTotal(newTotal);
+  };
+
+  const updateQuantity = async (productId, change) => {
+    const updatedItems = cartItems.map(item => {
+      if (item.id === productId) {
+        const newQuantity = Math.max(1, item.quantity + change);
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    });
+
+    const storageItems = updatedItems.map(({ id, quantity }) => ({ id, quantity }));
+    localStorage.setItem('cartItems', JSON.stringify(storageItems));
+
+    setCartItems(updatedItems);
+    calculateTotal(updatedItems);
+    window.dispatchEvent(new Event('cartUpdate'));
+  };
+
+  const removeItem = async (productId) => {
+    const updatedItems = cartItems.filter(item => item.id !== productId);
+    
+    const storageItems = updatedItems.map(({ id, quantity }) => ({ id, quantity }));
+    localStorage.setItem('cartItems', JSON.stringify(storageItems));
+
+    setCartItems(updatedItems);
+    calculateTotal(updatedItems);
+    window.dispatchEvent(new Event('cartUpdate'));
+  };
+
+  const handleCheckout = async () => {
+    try {
+      setOrderProcessing(true);
+      
+      // Get JWT from localStorage and decode it
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('User is not authenticated');
+      }
+  
+      const infoId = localStorage.getItem('userId');
+      if (!infoId) {
+        throw new Error('User ID not found');
+      }
+  
+      // Validate cart items
+      if (cartItems.length === 0) {
+        throw new Error('Cart is empty');
+      }
+  
+      // Prepare the order data
+      const orderDTO = {
+        infoId: infoId,
+        orderItems: cartItems.map(item => ({
+          productId: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        totalAmount: total,
+        status: "PENDING",
+      };
+  
+      console.log('Order DTO:', orderDTO); // Log order data for debugging
+  
+      // Send the order data to the server
+      const response = await fetch(`${API_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderDTO),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+  
+      const createdOrder = await response.json();
+      console.log('Order created:', createdOrder);
+  
+      // Clear cart after successful order
+      localStorage.removeItem('cartItems');
+      setCartItems([]);
+      calculateTotal([]);
+      window.dispatchEvent(new Event('cartUpdate'));
+  
+      // Show success message or redirect to order confirmation
+      alert('Order placed successfully!');
+      onClose();
+  
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setError('Failed to process order. Please try again.');
+    } finally {
+      setOrderProcessing(false);
+    }
+  };
+  
+  
+  if (!isVisible) return null;
+
   return (
-    isVisible && (
-      <div
-        ref={cartRef}
-        className="max-w-3xl mx-auto p-6 absolute top-16 right-0 z-20 w-full bg-white rounded-lg shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-95"
-      >
-        {!showPaymentForm ? (
-          <>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Shopping Cart</h2>
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      
+      <div className="absolute right-0 top-0 h-full w-full max-w-md">
+        <div className="flex h-full flex-col bg-white shadow-xl">
+          {/* Cart Header */}
+          <div className="flex items-center justify-between px-4 py-6 bg-gray-900">
+            <div className="flex items-center space-x-2">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <h2 className="text-lg font-medium">Shopping Cart</h2>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Cart Items */}
+          <div className="flex-1 overflow-y-auto px-4 py-6">
             {loading ? (
-              <p>Loading product details...</p>
+              <div className="text-center py-8">
+                <p>Loading cart items...</p>
+              </div>
             ) : error ? (
-              <p className="text-red-600">Error: {error}</p>
+              <div className="text-center py-8 text-red-500">
+                <p>{error}</p>
+              </div>
             ) : cartItems.length === 0 ? (
-              <p className="text-lg text-gray-600">Your cart is empty.</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">Your cart is empty</p>
+              </div>
             ) : (
-              <>
-                <ul className="space-y-6">
-                  {cartItems.map((item) => {
-                    const productDetail = productDetails.find(product => product.id === item.id);
-                    return (
-                      <OrderItem
-                        key={item.id}
-                        product={productDetail}
-                        quantity={item.quantity}
-                        price={productDetail ? productDetail.price : 0}
-                        onDelete={() => deleteItemFromCart(item.id)}
-                      />
-                    );
-                  })}
-                </ul>
-                <div className="mt-8 flex justify-between items-center border-t pt-4">
-                  <p className="text-lg font-semibold text-gray-900">
-                    Total Price: ${totalPrice.toFixed(2)}
-                  </p>
-                  <button
-                    onClick={handleProceedToCheckout}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-green-700 transition duration-300"
-                  >
-                    Proceed to Checkout
-                  </button>
-                </div>
-              </>
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-4 bg-white p-4 rounded-lg border">
+                    <img
+                      src={item.image || '/placeholder.jpg'}
+                      alt={item.name}
+                      className="h-20 w-20 object-cover rounded"
+                      onError={(e) => { e.target.src = '/placeholder.jpg' }}
+                    />
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        ${item.price} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
+                      </p>
+                      
+                      <div className="flex items-center space-x-2 mt-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, -1)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
+                          </svg>
+                        </button>
+                        <span className="text-sm">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, 1)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
-          </>
-        ) : (
-          <StripePayment totalPrice={totalPrice} />
-        )}
+          </div>
+
+          {/* Cart Footer */}
+          <div className="border-t border-gray-200 px-4 py-6">
+            <div className="flex justify-between text-base font-medium text-gray-900">
+              <p>Total</p>
+              <p>${total.toFixed(2)}</p>
+            </div>
+            <button
+              onClick={handleCheckout}
+              disabled={cartItems.length === 0 || loading || orderProcessing}
+              className="mt-6 w-full rounded-md bg-black py-3 px-4 text-base font-medium text-white shadow-sm hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {orderProcessing ? 'Processing...' : 'Checkout'}
+            </button>
+          </div>
+        </div>
       </div>
-    )
+    </div>
   );
 };
 
