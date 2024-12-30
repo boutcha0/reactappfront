@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
             setUser({ email: userEmail });
           } else {
-            // Token is invalid, logout
             logout();
           }
         })

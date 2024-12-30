@@ -106,7 +106,6 @@ const Cart = ({ isVisible, onClose }) => {
       
       <div className="absolute right-0 top-0 h-full w-full max-w-md">
         <div className="flex h-full flex-col bg-white shadow-xl">
-          {/* Cart Header */}
           <div className="flex items-center justify-between px-4 py-6 bg-gray-900">
             <div className="flex items-center space-x-2">
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

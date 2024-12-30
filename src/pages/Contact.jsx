@@ -99,7 +99,7 @@ export default function Contact({ isOpen, onClose }) {
                 onChange={handleChange}
                 required
                 className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
-                placeholder="you@example.com"
+                placeholder="you@skymark.com"
               />
             </div>
 

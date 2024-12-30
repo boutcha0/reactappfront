@@ -8,7 +8,6 @@ const stripePromise = loadStripe("pk_test_51QVfcFP5WXi7XkfGk1V7IohDJ1yyojjUVDwju
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
 
-
   useEffect(() => {
     const items = JSON.parse(localStorage.getItem('cartItems') || '[]');
     setCartItems(items);
@@ -26,11 +25,11 @@ const CheckoutPage = () => {
           <div className="space-y-4">
             {cartItems.map(item => (
               <div key={item.id} className="flex justify-between items-center border-b pb-2">
-              <div>
-                <img src={item?.image} alt="" width="60" height="60"/>
+                <div>
+                  <img src={item?.image} alt="" width="60" height="60"/>
                   <h3 className="font-medium">{item.name}</h3>
-                  </div>
-                  <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                </div>
+                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                 <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
@@ -40,7 +39,6 @@ const CheckoutPage = () => {
             </div>
           </div>
         </div>
-
 
         <div className="bg-white rounded-lg shadow p-6">
           <Elements stripe={stripePromise}>
@@ -56,11 +54,43 @@ const PaymentForm = ({ total, customerId }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState(null);
     const [fullName, setFullName] = useState('');
+    const [orderId, setOrderId] = useState(null);
     const [shippingAddress, setShippingAddress] = useState({
       streetAddress: '', city: '', state: '', postalCode: '', country: ''
     });
     const stripe = useStripe();
     const elements = useElements();
+
+    const handleDownloadInvoice = async () => {
+      try {
+        const response = await axios.post(
+          `http://localhost:8080/api/payments/generate-invoice/${orderId}`,
+          {},
+          {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            },
+            responseType: 'blob'
+          }
+        );
+
+        // Create a blob from the PDF stream
+        const file = new Blob([response.data], { type: 'application/pdf' });
+        
+        // Create a link element and trigger download
+        const fileURL = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = fileURL;
+        link.download = `invoice-${orderId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(fileURL);
+      } catch (error) {
+        console.error('Error downloading invoice:', error);
+        alert('Error downloading invoice. Please try again.');
+      }
+    };
   
     const handleSubmit = async (e) => {
       e.preventDefault();
@@ -69,17 +99,13 @@ const PaymentForm = ({ total, customerId }) => {
       setIsProcessing(true);
   
       try {
-        // Validate the shipping address
         for (const [key, value] of Object.entries(shippingAddress)) {
           if (!value.trim()) {
             throw new Error(`Please fill in the ${key.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
           }
         }
-  
-        // Save the shipping address locally
         localStorage.setItem('shippingAddress', JSON.stringify(shippingAddress));
   
-        // Create a PaymentIntent on the server
         const paymentIntentResponse = await axios.post(
           'http://localhost:8080/api/payments/create-payment-intent',
           { amount: Math.round(total * 100), currency: 'usd' }
@@ -87,7 +113,6 @@ const PaymentForm = ({ total, customerId }) => {
   
         const clientSecret = paymentIntentResponse.data;
   
-        // Confirm the card payment
         const result = await stripe.confirmCardPayment(clientSecret, {
           payment_method: {
             card: elements.getElement(CardElement),
@@ -113,12 +138,11 @@ const PaymentForm = ({ total, customerId }) => {
             status: "PAID",
           };
   
-          // Save the order on the server
-          await axios.post('http://localhost:8080/api/orders', orderDTO, {
+          const orderResponse = await axios.post('http://localhost:8080/api/orders', orderDTO, {
             headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
           });
-  
-          // Clear local storage
+
+          setOrderId(orderResponse.data.id);
           localStorage.removeItem('cartItems');
           localStorage.removeItem('shippingAddress');
           setPaymentStatus('Payment and order successful!');
@@ -135,15 +159,27 @@ const PaymentForm = ({ total, customerId }) => {
         <h2 className="text-xl font-bold">Shipping & Payment Details</h2>
         
         {paymentStatus && (
-          <div
-            role="alert"
-            className={`mb-4 p-3 rounded ${
-              paymentStatus.includes('successful') 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {paymentStatus}
+          <div className="space-y-4">
+            <div
+              role="alert"
+              className={`mb-4 p-3 rounded ${
+                paymentStatus.includes('successful') 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {paymentStatus}
+            </div>
+            
+            {orderId && (
+              <button
+                type="button"
+                onClick={handleDownloadInvoice}
+                className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black"
+              >
+                Download Invoice
+              </button>
+            )}
           </div>
         )}
   
@@ -203,6 +239,5 @@ const PaymentForm = ({ total, customerId }) => {
       </form>
     );
   };
-  
 
 export default CheckoutPage;
