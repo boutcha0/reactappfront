@@ -1,15 +1,12 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-// Create a context for auth
 const AuthContext = createContext();
 
-// AuthProvider component to wrap your app and provide context values
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Memoize validateToken using useCallback to resolve dependency warning
   const validateToken = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -35,9 +32,8 @@ export const AuthProvider = ({ children }) => {
       logout();
       return false;
     }
-  }, []); // Empty dependency array as the function doesn't depend on external state
+  }, []); 
 
-  // Remove the eslint-disable-next-line and add validateToken to dependency array
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const userEmail = localStorage.getItem('userEmail');
@@ -56,9 +52,8 @@ export const AuthProvider = ({ children }) => {
         })
         .catch(() => logout());
     }
-  }, [validateToken]); // Add validateToken as a dependency
+  }, [validateToken]); 
 
-  // Memoize refreshToken using useCallback
   const refreshToken = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     try {
@@ -78,18 +73,16 @@ export const AuthProvider = ({ children }) => {
       }
       return false;
     } catch (error) {
-      logout(); // Logout if refresh fails
+      logout(); 
       return false;
     }
   }, []);
 
-  // Login method to update authentication state
   const login = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
   };
 
-  // Logout method to clear authentication state
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -104,14 +97,14 @@ export const AuthProvider = ({ children }) => {
       login, 
       logout,
       validateToken,
-      refreshToken // Keeping refreshToken in the context if needed
+      refreshToken 
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use authentication context
+
 export const useAuth = () => {
   return useContext(AuthContext);
 };

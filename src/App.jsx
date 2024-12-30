@@ -6,15 +6,14 @@ import Register from './pages/Register';
 import Navbar from './components/Shared/Navbar';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import CheckoutPage from './components/CheckoutPage';
 import { AuthProvider } from '../src/components/Shared/AuthContext';
-import ProtectedRoute from './ProtectedRoute'; // 
-const App = () => {
+import ProtectedRoute from './ProtectedRoute';
 
-  
+const App = () => {
   const [cart, setCart] = useState([]);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
-  // Function to add a product to the cart
   const addToCart = (product) => {
     setCart((prevCart) => {
       const productExists = prevCart.find((item) => item.id === product.id);
@@ -24,16 +23,13 @@ const App = () => {
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
       }
+      return [...prevCart, { ...product, quantity: 1 }];
     });
   };
 
   const deleteFromCart = (productId) => {
-    setCart((prevCart) => {
-      return prevCart.filter((item) => item.id !== productId);
-    });
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
   return (
@@ -67,8 +63,14 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
-          
-          {/* Redirect to login if no route matches */}
+          <Route 
+            path="/checkout" 
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>

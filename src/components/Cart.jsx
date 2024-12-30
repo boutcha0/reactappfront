@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
+
 
 const Cart = ({ isVisible, onClose }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
-  const [orderProcessing, setOrderProcessing] = useState(false);
+  const [orderProcessing] = useState(false);
+  const navigate = useNavigate();
   
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+  const API_URL = 'http://localhost:8080';
 
   const fetchProductDetails = async (productId) => {
     try {
@@ -50,7 +52,7 @@ const Cart = ({ isVisible, onClose }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, []);
 
   useEffect(() => {
     if (isVisible) {
@@ -92,74 +94,9 @@ const Cart = ({ isVisible, onClose }) => {
   };
 
   const handleCheckout = async () => {
-    try {
-      setOrderProcessing(true);
-      
-      // Get JWT from localStorage and decode it
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        throw new Error('User is not authenticated');
-      }
-  
-      const infoId = localStorage.getItem('userId');
-      if (!infoId) {
-        throw new Error('User ID not found');
-      }
-  
-      // Validate cart items
-      if (cartItems.length === 0) {
-        throw new Error('Cart is empty');
-      }
-  
-      // Prepare the order data
-      const orderDTO = {
-        infoId: infoId,
-        orderItems: cartItems.map(item => ({
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        totalAmount: total,
-        status: "PENDING",
-      };
-  
-      console.log('Order DTO:', orderDTO); // Log order data for debugging
-  
-      // Send the order data to the server
-      const response = await fetch(`${API_URL}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderDTO),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to create order');
-      }
-  
-      const createdOrder = await response.json();
-      console.log('Order created:', createdOrder);
-  
-      // Clear cart after successful order
-      localStorage.removeItem('cartItems');
-      setCartItems([]);
-      calculateTotal([]);
-      window.dispatchEvent(new Event('cartUpdate'));
-  
-      // Show success message or redirect to order confirmation
-      alert('Order placed successfully!');
-      onClose();
-  
-    } catch (err) {
-      console.error('Checkout error:', err);
-      setError('Failed to process order. Please try again.');
-    } finally {
-      setOrderProcessing(false);
-    }
+    
+    navigate('/checkout');
   };
-  
   
   if (!isVisible) return null;
 
