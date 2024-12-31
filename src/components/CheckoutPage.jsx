@@ -14,29 +14,49 @@ const CheckoutPage = () => {
   useEffect(() => {
     const loadCartItems = async () => {
       try {
+        setLoading(true);
         const storedItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
         
-        const orderDTO = {
-          orderItems: storedItems.map(item => ({
-            productId: item.id,
-            quantity: item.quantity
-          }))
-        };
-
+        // Get backend calculation for the order
         const orderCalculation = await axios.post(
           'http://localhost:8080/api/orders/calculate',
-          orderDTO,
+          {
+            orderItems: storedItems.map(item => ({
+              productId: item.id,
+              quantity: item.quantity
+            }))
+          },
           {
             headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
           }
         );
 
+        // Get product details for display
+        const itemsWithDetails = await Promise.all(
+          storedItems.map(async (item) => {
+            try {
+              const response = await axios.get(
+                `http://localhost:8080/api/products/${item.id}`,
+                {
+                  headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+                }
+              );
+              return {
+                ...response.data,
+                quantity: item.quantity
+              };
+            } catch (error) {
+              console.error(`Failed to fetch details for product ${item.id}:`, error);
+              throw error;
+            }
+          })
+        );
+
+        setCartItems(itemsWithDetails);
         setOrderSummary(orderCalculation.data);
-        setCartItems(storedItems);
-        setLoading(false);
       } catch (err) {
-        console.error('Error:', err);
         setError(err.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -45,11 +65,19 @@ const CheckoutPage = () => {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 py-8 flex justify-center items-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <p className="text-lg">Loading checkout details...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="min-h-screen bg-gray-50 py-8 flex justify-center items-center text-red-600">{error}</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <p className="text-lg text-red-600">Error loading checkout: {error}</p>
+      </div>
+    );
   }
 
   return (
@@ -60,32 +88,33 @@ const CheckoutPage = () => {
         <div className="bg-white rounded-lg shadow mb-8 p-6">
           <h2 className="text-xl font-bold mb-4">Order Summary</h2>
           <div className="space-y-4">
-            {orderSummary?.orderItems.map((item) => (
-              <div key={item.productId} className="flex justify-between items-center border-b pb-2">
+            {orderSummary && orderSummary.orderItems.map((item, index) => (
+              <div key={item.id || index} className="flex justify-between items-center border-b pb-2">
                 <div className="flex items-center space-x-4">
                   <img 
-                    src={item.image} 
-                    alt={item.name} 
+                    src={cartItems[index]?.image || '/placeholder.jpg'} 
+                    alt={cartItems[index]?.name || 'Product'}
                     className="w-16 h-16 object-cover rounded"
+                    onError={(e) => { e.target.src = '/placeholder.jpg' }}
                   />
                   <div>
-                    <p className="font-medium text-gray-900">{item.name}</p>
+                    <h3 className="font-medium">{cartItems[index]?.name || `Product #${item.productId}`}</h3>
                     <p className="text-sm text-gray-600">
-                      Quantity: {item.quantity} × ${item.unitPrice?.toFixed(2)}
+                      Quantity: {item.quantity} × ${item.unitPrice.toFixed(2)}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">${item.totalAmount?.toFixed(2)}</p>
+                  <p className="font-medium">${item.totalAmount.toFixed(2)}</p>
                 </div>
               </div>
             ))}
-            <div className="flex justify-between pt-4 border-t">
-              <span className="text-lg font-bold">Total</span>
-              <span className="text-lg font-bold">
-                ${orderSummary?.totalAmount?.toFixed(2)}
-              </span>
-            </div>
+            {orderSummary && (
+              <div className="flex justify-between pt-4 border-t">
+                <span className="text-lg font-bold">Total</span>
+                <span className="text-lg font-bold">${orderSummary.totalAmount.toFixed(2)}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -93,7 +122,7 @@ const CheckoutPage = () => {
           <Elements stripe={stripePromise}>
             <PaymentForm 
               customerId={localStorage.getItem('userId')} 
-              orderSummary={orderSummary}
+              cartItems={cartItems}
               setOrderSummary={setOrderSummary}
             />
           </Elements>
@@ -103,7 +132,7 @@ const CheckoutPage = () => {
   );
 };
 
-const PaymentForm = ({ customerId, orderSummary, setOrderSummary }) => {
+const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [fullName, setFullName] = useState('');
@@ -149,26 +178,30 @@ const PaymentForm = ({ customerId, orderSummary, setOrderSummary }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!stripe || !elements || !orderSummary) return;
+    if (!stripe || !elements) return;
 
     setIsProcessing(true);
 
     try {
+      // Validate shipping address
       for (const [key, value] of Object.entries(shippingAddress)) {
         if (!value.trim()) {
           throw new Error(`Please fill in the ${key.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
         }
       }
 
-      // Create order with PENDING status
+      // Create initial order with PENDING status
       const orderDTO = {
         infoId: customerId,
-        orderItems: orderSummary.orderItems,
+        orderItems: cartItems.map(item => ({
+          productId: item.id,
+          quantity: item.quantity
+        })),
         shippingAddress,
-        status: "PENDING",
-        totalAmount: orderSummary.totalAmount
+        status: "PENDING"
       };
 
+      // Create order and get backend-calculated total
       const orderResponse = await axios.post(
         'http://localhost:8080/api/orders',
         orderDTO,
@@ -178,7 +211,9 @@ const PaymentForm = ({ customerId, orderSummary, setOrderSummary }) => {
       );
 
       const { id: createdOrderId, totalAmount } = orderResponse.data;
+      setOrderSummary(orderResponse.data);
 
+      // Create payment intent using backend total
       const paymentIntentResponse = await axios.post(
         'http://localhost:8080/api/payments/create-payment-intent',
         { 
@@ -198,6 +233,7 @@ const PaymentForm = ({ customerId, orderSummary, setOrderSummary }) => {
       });
 
       if (result.error) {
+        // Update order status to FAILED if payment fails
         await axios.put(
           `http://localhost:8080/api/orders/${createdOrderId}`,
           { status: "FAILED" },
@@ -209,6 +245,7 @@ const PaymentForm = ({ customerId, orderSummary, setOrderSummary }) => {
       }
 
       if (result.paymentIntent.status === 'succeeded') {
+        // Update order status to PAID
         await axios.put(
           `http://localhost:8080/api/orders/${createdOrderId}`,
           { status: "PAID" },
@@ -221,6 +258,7 @@ const PaymentForm = ({ customerId, orderSummary, setOrderSummary }) => {
         localStorage.removeItem('cartItems');
         setPaymentStatus('Payment and order successful!');
 
+        // Sync with Stripe
         await axios.post(
           `http://localhost:8080/api/orders/${createdOrderId}/sync`,
           {},
