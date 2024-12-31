@@ -198,7 +198,6 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
           quantity: item.quantity
         })),
         shippingAddress,
-        status: "PENDING"
       };
 
       // Create order and get backend-calculated total
@@ -232,40 +231,14 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
         }
       });
 
-      if (result.error) {
-        // Update order status to FAILED if payment fails
-        await axios.put(
-          `http://localhost:8080/api/orders/${createdOrderId}`,
-          { status: "FAILED" },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-          }
-        );
-        throw new Error(result.error.message);
-      }
+     
 
       if (result.paymentIntent.status === 'succeeded') {
-        // Update order status to PAID
-        await axios.put(
-          `http://localhost:8080/api/orders/${createdOrderId}`,
-          { status: "PAID" },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-          }
-        );
-
+        
         setOrderId(createdOrderId);
         localStorage.removeItem('cartItems');
         setPaymentStatus('Payment and order successful!');
 
-        // Sync with Stripe
-        await axios.post(
-          `http://localhost:8080/api/orders/${createdOrderId}/sync`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-          }
-        );
       }
     } catch (error) {
       setPaymentStatus('Error: ' + error.message);
