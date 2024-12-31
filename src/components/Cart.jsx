@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-
 const Cart = ({ isVisible, onClose }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,11 +64,10 @@ const Cart = ({ isVisible, onClose }) => {
     setTotal(newTotal);
   };
 
-  const updateQuantity = async (productId, change) => {
+  const updateQuantity = async (productId, newQuantity) => {
     const updatedItems = cartItems.map(item => {
       if (item.id === productId) {
-        const newQuantity = Math.max(1, item.quantity + change);
-        return { ...item, quantity: newQuantity };
+        return { ...item, quantity: parseInt(newQuantity) };
       }
       return item;
     });
@@ -94,7 +92,6 @@ const Cart = ({ isVisible, onClose }) => {
   };
 
   const handleCheckout = async () => {
-    
     navigate('/checkout');
   };
   
@@ -120,7 +117,6 @@ const Cart = ({ isVisible, onClose }) => {
             </button>
           </div>
 
-          {/* Cart Items */}
           <div className="flex-1 overflow-y-auto px-4 py-6">
             {loading ? (
               <div className="text-center py-8">
@@ -151,24 +147,18 @@ const Cart = ({ isVisible, onClose }) => {
                         ${item.price} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
                       </p>
                       
-                      <div className="flex items-center space-x-2 mt-2">
-                        <button
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="p-1 rounded-full hover:bg-gray-100"
+                      <div className="flex items-center space-x-2 mt-2 w-24">
+                        <select 
+                          value={item.quantity} 
+                          onChange={(e) => updateQuantity(item.id, e.target.value)}
+                          className="block w-full rounded-md border-gray-300 py-1.5 text-gray-900 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm"
                         >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
-                          </svg>
-                        </button>
-                        <span className="text-sm">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="p-1 rounded-full hover:bg-gray-100"
-                        >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                          </svg>
-                        </button>
+                          {[...Array(10)].map((_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {i + 1}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     
@@ -186,7 +176,6 @@ const Cart = ({ isVisible, onClose }) => {
             )}
           </div>
 
-          {/* Cart Footer */}
           <div className="border-t border-gray-200 px-4 py-6">
             <div className="flex justify-between text-base font-medium text-gray-900">
               <p>Total</p>

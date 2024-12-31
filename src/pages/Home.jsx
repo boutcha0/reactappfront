@@ -106,7 +106,7 @@ const Home = ({ addToCart }) => {
           )}
         </div>
       </div>
-      <Cart cartItems={products} deleteFromCart={() => {}} /> {/* Pass deleteFromCart function properly */}
+      <Cart cartItems={products} deleteFromCart={() => {}} />
     </div>
   );
 };
