@@ -92,6 +92,7 @@ const Cart = ({ isVisible, onClose }) => {
   };
 
   const handleCheckout = async () => {
+    onClose();
     navigate('/checkout');
   };
   

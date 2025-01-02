@@ -183,14 +183,12 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
     setIsProcessing(true);
 
     try {
-      // Validate shipping address
       for (const [key, value] of Object.entries(shippingAddress)) {
         if (!value.trim()) {
           throw new Error(`Please fill in the ${key.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
         }
       }
 
-      // Create initial order with PENDING status
       const orderDTO = {
         infoId: customerId,
         orderItems: cartItems.map(item => ({
@@ -200,7 +198,6 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
         shippingAddress,
       };
 
-      // Create order and get backend-calculated total
       const orderResponse = await axios.post(
         'http://localhost:8080/api/orders',
         orderDTO,
@@ -230,8 +227,6 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
           billing_details: { name: fullName }
         }
       });
-
-     
 
       if (result.paymentIntent.status === 'succeeded') {
         

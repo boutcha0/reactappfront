@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate} from "react-router-dom";
 
 const Register = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     adresse: "",
@@ -34,6 +36,10 @@ const Register = () => {
       setMessage("Registration successful!");
       setError(""); // Clear errors
       setFormData({ name: "", adresse: "", email: "", password: "" }); // Reset form
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+      
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred during registration.");
       setMessage("");
