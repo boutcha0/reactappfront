@@ -19,12 +19,11 @@ const Login = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          email,  // Changed from username to email
+          email,  
           password 
         }),
       });
   
-      // Parse response data
       const data = await response.json();
   
       if (response.ok) {
@@ -34,15 +33,12 @@ const Login = () => {
 
 
         
-        // Pass full user data to login method
         login({
           email: email,
-          // Add any additional user details if available
         });
         
         navigate('/');
       } else {
-        // Use the error message from the server
         setError(data.message || 'Login failed');
       }
     } catch (err) {

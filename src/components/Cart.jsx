@@ -14,9 +14,7 @@ const Cart = ({ isVisible, onClose }) => {
   const fetchProductDetails = async (productId) => {
     try {
       const response = await fetch(`${API_URL}/api/products/${productId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch product details');
-      }
+      if (!response.ok) throw new Error('Failed to fetch product details');
       return await response.json();
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -31,16 +29,8 @@ const Cart = ({ isVisible, onClose }) => {
       
       const itemsWithDetails = await Promise.all(
         storedItems.map(async (item) => {
-          try {
-            const productDetails = await fetchProductDetails(item.id);
-            return {
-              ...productDetails,
-              quantity: item.quantity
-            };
-          } catch (error) {
-            console.error(`Failed to fetch details for product ${item.id}:`, error);
-            return item;
-          }
+          const productDetails = await fetchProductDetails(item.id);
+          return { ...productDetails, quantity: item.quantity };
         })
       );
 
@@ -54,9 +44,7 @@ const Cart = ({ isVisible, onClose }) => {
   }, []);
 
   useEffect(() => {
-    if (isVisible) {
-      loadCartItems();
-    }
+    if (isVisible) loadCartItems();
   }, [isVisible, loadCartItems]);
 
   const calculateTotal = (items) => {
@@ -65,37 +53,37 @@ const Cart = ({ isVisible, onClose }) => {
   };
 
   const updateQuantity = async (productId, newQuantity) => {
-    const updatedItems = cartItems.map(item => {
-      if (item.id === productId) {
-        return { ...item, quantity: parseInt(newQuantity) };
-      }
-      return item;
-    });
+    const updatedItems = cartItems.map(item => 
+      item.id === productId ? { ...item, quantity: parseInt(newQuantity) } : item
+    );
 
     const storageItems = updatedItems.map(({ id, quantity }) => ({ id, quantity }));
     localStorage.setItem('cartItems', JSON.stringify(storageItems));
 
     setCartItems(updatedItems);
     calculateTotal(updatedItems);
-    window.dispatchEvent(new Event('cartUpdate'));
+    window.dispatchEvent(new CustomEvent('cartUpdate', {
+      detail: { items: storageItems }
+    }));
   };
 
   const removeItem = async (productId) => {
     const updatedItems = cartItems.filter(item => item.id !== productId);
-    
     const storageItems = updatedItems.map(({ id, quantity }) => ({ id, quantity }));
+    
     localStorage.setItem('cartItems', JSON.stringify(storageItems));
-
     setCartItems(updatedItems);
     calculateTotal(updatedItems);
-    window.dispatchEvent(new Event('cartUpdate'));
+    window.dispatchEvent(new CustomEvent('cartUpdate', {
+      detail: { items: storageItems }
+    }));
   };
 
   const handleCheckout = async () => {
     onClose();
     navigate('/checkout');
   };
-  
+
   if (!isVisible) return null;
 
   return (
@@ -104,7 +92,7 @@ const Cart = ({ isVisible, onClose }) => {
       
       <div className="absolute right-0 top-0 h-full w-full max-w-md">
         <div className="flex h-full flex-col bg-white shadow-xl">
-          <div className="flex items-center justify-between px-4 py-6 bg-gray-900">
+          <div className="flex items-center justify-between px-4 py-6 bg-gray-900 text-white">
             <div className="flex items-center space-x-2">
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -155,9 +143,7 @@ const Cart = ({ isVisible, onClose }) => {
                           className="block w-full rounded-md border-gray-300 py-1.5 text-gray-900 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm"
                         >
                           {[...Array(10)].map((_, i) => (
-                            <option key={i + 1} value={i + 1}>
-                              {i + 1}
-                            </option>
+                            <option key={i + 1} value={i + 1}>{i + 1}</option>
                           ))}
                         </select>
                       </div>

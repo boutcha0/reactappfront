@@ -17,43 +17,23 @@ const CheckoutPage = () => {
         setLoading(true);
         const storedItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
         
-        // Get backend calculation for the order
-        const orderCalculation = await axios.post(
-          'http://localhost:8080/api/orders/calculate',
-          {
-            orderItems: storedItems.map(item => ({
-              productId: item.id,
-              quantity: item.quantity
-            }))
-          },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-          }
-        );
-
-        // Get product details for display
         const itemsWithDetails = await Promise.all(
           storedItems.map(async (item) => {
-            try {
-              const response = await axios.get(
-                `http://localhost:8080/api/products/${item.id}`,
-                {
-                  headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-                }
-              );
-              return {
-                ...response.data,
-                quantity: item.quantity
-              };
-            } catch (error) {
-              console.error(`Failed to fetch details for product ${item.id}:`, error);
-              throw error;
-            }
+            const response = await axios.get(
+              `http://localhost:8080/api/products/${item.id}`,
+              {
+                headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+              }
+            );
+            return {
+              ...response.data,
+              quantity: item.quantity
+            };
           })
         );
 
         setCartItems(itemsWithDetails);
-        setOrderSummary(orderCalculation.data);
+        calculateOrderSummary(itemsWithDetails);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -63,6 +43,22 @@ const CheckoutPage = () => {
 
     loadCartItems();
   }, []);
+
+  const calculateOrderSummary = (items) => {
+    const orderItems = items.map(item => ({
+      productId: item.id,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      totalAmount: item.price * item.quantity
+    }));
+
+    const totalAmount = orderItems.reduce((sum, item) => sum + item.totalAmount, 0);
+
+    setOrderSummary({
+      orderItems,
+      totalAmount
+    });
+  };
 
   if (loading) {
     return (
@@ -89,7 +85,7 @@ const CheckoutPage = () => {
           <h2 className="text-xl font-bold mb-4">Order Summary</h2>
           <div className="space-y-4">
             {orderSummary && orderSummary.orderItems.map((item, index) => (
-              <div key={item.id || index} className="flex justify-between items-center border-b pb-2">
+              <div key={item.productId} className="flex justify-between items-center border-b pb-2">
                 <div className="flex items-center space-x-4">
                   <img 
                     src={cartItems[index]?.image || '/placeholder.jpg'} 
@@ -123,6 +119,7 @@ const CheckoutPage = () => {
             <PaymentForm 
               customerId={localStorage.getItem('userId')} 
               cartItems={cartItems}
+              orderSummary={orderSummary}
               setOrderSummary={setOrderSummary}
             />
           </Elements>
@@ -132,7 +129,7 @@ const CheckoutPage = () => {
   );
 };
 
-const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
+const PaymentForm = ({ customerId, cartItems, orderSummary, setOrderSummary }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [fullName, setFullName] = useState('');
@@ -206,14 +203,12 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
         }
       );
 
-      const { id: createdOrderId, totalAmount } = orderResponse.data;
-      setOrderSummary(orderResponse.data);
+      const { id: createdOrderId } = orderResponse.data;
 
-      // Create payment intent using backend total
       const paymentIntentResponse = await axios.post(
         'http://localhost:8080/api/payments/create-payment-intent',
         { 
-          amount: Math.round(totalAmount * 100),
+          amount: Math.round(orderSummary.totalAmount * 100),
           currency: 'usd',
           orderId: createdOrderId
         }
@@ -229,11 +224,10 @@ const PaymentForm = ({ customerId, cartItems, setOrderSummary }) => {
       });
 
       if (result.paymentIntent.status === 'succeeded') {
-        
         setOrderId(createdOrderId);
         localStorage.removeItem('cartItems');
+        window.dispatchEvent(new CustomEvent('cartUpdate', { detail: { items: [] } }));
         setPaymentStatus('Payment and order successful!');
-
       }
     } catch (error) {
       setPaymentStatus('Error: ' + error.message);

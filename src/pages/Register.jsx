@@ -9,13 +9,12 @@ const Register = () => {
     name: "",
     adresse: "",
     email: "",
-    password: "", // Add password field
+    password: "", 
   });
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Handle Input Change
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -23,7 +22,6 @@ const Register = () => {
     });
   };
 
-  // Handle Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.password) {
@@ -32,10 +30,10 @@ const Register = () => {
     }
 
     try {
-      await axios.post("http://localhost:8080/api/auth/register", formData); // Send password along with other fields
+      await axios.post("http://localhost:8080/api/auth/register", formData); 
       setMessage("Registration successful!");
-      setError(""); // Clear errors
-      setFormData({ name: "", adresse: "", email: "", password: "" }); // Reset form
+      setError(""); 
+      setFormData({ name: "", adresse: "", email: "", password: "" }); 
       setTimeout(() => {
         navigate('/login');
       }, 1500);
