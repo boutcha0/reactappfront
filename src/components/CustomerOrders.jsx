@@ -88,7 +88,7 @@ const CustomerOrders = () => {
                                     >
                                         <div className="space-y-2">
                                             <div className="flex items-center space-x-2">
-                                                <span className="font-medium">Dickes Package</span>
+                                                <span className="font-medium">Dickes Package   </span>
                                                 <span className={`px-2 py-1 text-xs rounded-full ${
                                                     order.status === 'PAID' 
                                                         ? 'bg-green-100 text-green-800'
