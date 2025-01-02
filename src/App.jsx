@@ -7,6 +7,8 @@ import Navbar from './components/Shared/Navbar';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import CheckoutPage from './components/CheckoutPage';
+import CustomerOrders from './components/CustomerOrders';
+import OrderDetails from './components/OrderDetails';
 import { AuthProvider } from '../src/components/Shared/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -76,6 +78,23 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <CheckoutPage />
+              </ProtectedRoute>
+            } 
+          />
+          {/* Updated Orders Routes */}
+          <Route 
+            path="/orders" 
+            element={
+              <ProtectedRoute>
+                <CustomerOrders customerId={localStorage.getItem('userId')} />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/orders/:orderId" 
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
               </ProtectedRoute>
             } 
           />
