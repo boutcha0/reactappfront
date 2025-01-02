@@ -9,7 +9,6 @@ const OrderDetails = () => {
     const { orderId } = useParams();
     const navigate = useNavigate();
 
-    // Fetch the order details and product details
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
@@ -23,13 +22,11 @@ const OrderDetails = () => {
                 const data = await response.json();
                 setOrder(data);
 
-                // Fetch product details for each order item
                 const productPromises = data.orderItems.map(item =>
                     fetch(`http://localhost:8080/api/products/${item.productId}`).then(res => res.json())
                 );
                 const productDetails = await Promise.all(productPromises);
                 
-                // Store the product details in the state
                 const productMap = productDetails.reduce((acc, product) => {
                     acc[product.id] = product;
                     return acc;
@@ -114,7 +111,7 @@ const OrderDetails = () => {
                             <div className="space-y-4">
                                 <h3 className="font-medium">Order Items</h3>
                                 {order?.orderItems.map((item) => {
-                                    const product = products[item.productId]; // Get the product details
+                                    const product = products[item.productId]; 
                                     return (
                                         <div
                                             key={item.id}

@@ -69,7 +69,7 @@ const Home = ({ addToCart }) => {
           <h2 className="text-2xl font-bold tracking-tight text-gray-900">List of Products</h2>
           <button
             onClick={() => navigate('/orders')}
-            className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black"
+            className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-black-700 transition-colors duration-200"
           >
             View Orders
           </button>

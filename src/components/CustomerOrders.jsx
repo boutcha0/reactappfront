@@ -8,19 +8,16 @@ const CustomerOrders = () => {
     const [customerId, setCustomerId] = useState(null);
     const navigate = useNavigate();
 
-    // Fetch customerId from localStorage when component mounts
     useEffect(() => {
         const storedCustomerId = localStorage.getItem('userId');
         if (storedCustomerId) {
             setCustomerId(storedCustomerId);
         } else {
-            // Handle the case where userId is not in localStorage
             setError('Customer ID not found.');
             setLoading(false);
         }
     }, []);
 
-    // Fetch orders if customerId is available
     useEffect(() => {
         if (customerId) {
             const fetchOrders = async () => {
@@ -91,7 +88,7 @@ const CustomerOrders = () => {
                                     >
                                         <div className="space-y-2">
                                             <div className="flex items-center space-x-2">
-                                                <span className="font-medium">Order {order.id}</span>
+                                                <span className="font-medium">Dickes Package</span>
                                                 <span className={`px-2 py-1 text-xs rounded-full ${
                                                     order.status === 'PAID' 
                                                         ? 'bg-green-100 text-green-800'
