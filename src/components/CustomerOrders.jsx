@@ -1,38 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const CustomerOrders = ({ customerId }) => {
+const CustomerOrders = () => {
     const [orders, setOrders] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [customerId, setCustomerId] = useState(null);
     const navigate = useNavigate();
 
-    React.useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                setLoading(true);
-                const response = await fetch(`http://localhost:8080/api/orders/info/${customerId}`);
+    // Fetch customerId from localStorage when component mounts
+    useEffect(() => {
+        const storedCustomerId = localStorage.getItem('userId');
+        if (storedCustomerId) {
+            setCustomerId(storedCustomerId);
+        } else {
+            // Handle the case where userId is not in localStorage
+            setError('Customer ID not found.');
+            setLoading(false);
+        }
+    }, []);
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+    // Fetch orders if customerId is available
+    useEffect(() => {
+        if (customerId) {
+            const fetchOrders = async () => {
+                try {
+                    setLoading(true);
+                    const response = await fetch(`http://localhost:8080/api/orders/info/${customerId}`);
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        setOrders(data);
+                    } else {
+                        setOrders([]);
+                    }
+                } catch (error) {
+                    setError(error.message);
+                    console.error('Error fetching orders:', error);
+                } finally {
+                    setLoading(false);
                 }
+            };
 
-                const data = await response.json();
-
-                if (data && Array.isArray(data) && data.length > 0) {
-                    setOrders(data);
-                } else {
-                    setOrders([]);
-                }
-            } catch (error) {
-                setError(error.message);
-                console.error('Error fetching orders:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchOrders();
+            fetchOrders();
+        }
     }, [customerId]);
 
     const handleOrderClick = (orderId) => {

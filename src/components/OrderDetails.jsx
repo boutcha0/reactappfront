@@ -5,9 +5,11 @@ const OrderDetails = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [products, setProducts] = useState({}); // Store product details by productId
     const { orderId } = useParams();
     const navigate = useNavigate();
 
+    // Fetch the order details and product details
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
@@ -20,6 +22,19 @@ const OrderDetails = () => {
 
                 const data = await response.json();
                 setOrder(data);
+
+                // Fetch product details for each order item
+                const productPromises = data.orderItems.map(item =>
+                    fetch(`http://localhost:8080/api/products/${item.productId}`).then(res => res.json())
+                );
+                const productDetails = await Promise.all(productPromises);
+                
+                // Store the product details in the state
+                const productMap = productDetails.reduce((acc, product) => {
+                    acc[product.id] = product;
+                    return acc;
+                }, {});
+                setProducts(productMap);
             } catch (error) {
                 setError(error.message);
                 console.error('Error fetching order details:', error);
@@ -98,20 +113,30 @@ const OrderDetails = () => {
 
                             <div className="space-y-4">
                                 <h3 className="font-medium">Order Items</h3>
-                                {order?.orderItems.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex justify-between items-center p-4 border rounded-lg"
-                                    >
-                                        <div>
-                                            <p className="font-medium">Product #{item.productId}</p>
-                                            <p className="text-sm text-gray-600">
-                                                Quantity: {item.quantity} × ${item.unitPrice.toFixed(2)}
-                                            </p>
+                                {order?.orderItems.map((item) => {
+                                    const product = products[item.productId]; // Get the product details
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="flex justify-between items-center p-4 border rounded-lg"
+                                        >
+                                            <div className="flex items-center space-x-4">
+                                                <img
+                                                    src={product?.image}
+                                                    alt={product?.name}
+                                                    className="w-16 h-16 object-cover rounded"
+                                                />
+                                                <div>
+                                                    <p className="font-medium">{product?.name}</p>
+                                                    <p className="text-sm text-gray-600">
+                                                        Quantity: {item.quantity} × ${product?.price.toFixed(2)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <p className="font-bold">${(item.quantity * product?.price).toFixed(2)}</p>
                                         </div>
-                                        <p className="font-bold">${item.totalAmount.toFixed(2)}</p>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {order?.shippingAddress && (
