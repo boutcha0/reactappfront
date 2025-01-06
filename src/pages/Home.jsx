@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cart from '../components/Cart';
 
 const Home = ({ addToCart }) => {
-  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,15 +63,7 @@ const Home = ({ addToCart }) => {
     <div className="bg-white">
       <ToastContainer />
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">List of Products</h2>
-          <button
-            onClick={() => navigate('/orders')}
-            className="bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black"
-          >
-            View Orders
-          </button>
-        </div>
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">List of Products</h2>
 
         {loading && <p>Loading products...</p>}
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}

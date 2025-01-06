@@ -257,7 +257,7 @@ const PaymentForm = ({ customerId, cartItems, orderSummary, setOrderSummary }) =
             <button
               type="button"
               onClick={handleDownloadInvoice}
-              className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black"
+              className="w-full bg-yellow-900 text-white py-2 px-4 rounded-md hover:bg-black"
             >
               Download Invoice
             </button>
