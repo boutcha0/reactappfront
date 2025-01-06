@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const OrderDetails = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [products, setProducts] = useState({}); // Store product details by productId
+    const [products, setProducts] = useState({});
+    const [downloadingInvoice, setDownloadingInvoice] = useState(false);
     const { orderId } = useParams();
     const navigate = useNavigate();
 
@@ -42,6 +44,37 @@ const OrderDetails = () => {
 
         fetchOrderDetails();
     }, [orderId]);
+
+    const handleDownloadInvoice = async () => {
+        try {
+            setDownloadingInvoice(true);
+            const response = await axios.post(
+                `http://localhost:8080/api/payments/generate-invoice/${orderId}`,
+                {},
+                {
+                    headers: { 
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                    },
+                    responseType: 'blob'
+                }
+            );
+
+            const file = new Blob([response.data], { type: 'application/pdf' });
+            const fileURL = URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = fileURL;
+            link.download = `invoice-${orderId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(fileURL);
+        } catch (error) {
+            console.error('Error downloading invoice:', error);
+            alert('Error downloading invoice. Please try again.');
+        } finally {
+            setDownloadingInvoice(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -84,7 +117,7 @@ const OrderDetails = () => {
 
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-900">Order #{order?.id} Details</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
                     </div>
                     <div className="p-6">
                         <div className="space-y-6">
@@ -147,9 +180,19 @@ const OrderDetails = () => {
                                 </div>
                             )}
 
-                            <div className="flex justify-between items-center pt-4 border-t">
-                                <span className="text-lg font-bold">Total</span>
-                                <span className="text-lg font-bold">${order?.totalAmount.toFixed(2)}</span>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center pt-4 border-t">
+                                    <span className="text-lg font-bold">Total</span>
+                                    <span className="text-lg font-bold">${order?.totalAmount.toFixed(2)}</span>
+                                </div>
+                                
+                                <button
+                                    onClick={handleDownloadInvoice}
+                                    disabled={downloadingInvoice}
+                                    className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {downloadingInvoice ? 'Downloading...' : 'Download Invoice'}
+                                </button>
                             </div>
                         </div>
                     </div>
