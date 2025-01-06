@@ -105,7 +105,7 @@ const Home = ({ addToCart }) => {
                 <div className="mt-4">
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black"
+                    className="w-full bg-yellow-900 text-white py-2 px-4 rounded-md hover:bg-black"
                     aria-label={`Add ${product.name} to cart`}
                   >
                     Add to Cart

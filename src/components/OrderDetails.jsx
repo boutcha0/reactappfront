@@ -6,7 +6,6 @@ const OrderDetails = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [products, setProducts] = useState({});
     const [downloadingInvoice, setDownloadingInvoice] = useState(false);
     const { orderId } = useParams();
     const navigate = useNavigate();
@@ -23,17 +22,6 @@ const OrderDetails = () => {
 
                 const data = await response.json();
                 setOrder(data);
-
-                const productPromises = data.orderItems.map(item =>
-                    fetch(`http://localhost:8080/api/products/${item.productId}`).then(res => res.json())
-                );
-                const productDetails = await Promise.all(productPromises);
-                
-                const productMap = productDetails.reduce((acc, product) => {
-                    acc[product.id] = product;
-                    return acc;
-                }, {});
-                setProducts(productMap);
             } catch (error) {
                 setError(error.message);
                 console.error('Error fetching order details:', error);
@@ -143,30 +131,27 @@ const OrderDetails = () => {
 
                             <div className="space-y-4">
                                 <h3 className="font-medium">Order Items</h3>
-                                {order?.orderItems.map((item) => {
-                                    const product = products[item.productId]; 
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            className="flex justify-between items-center p-4 border rounded-lg"
-                                        >
-                                            <div className="flex items-center space-x-4">
-                                                <img
-                                                    src={product?.image}
-                                                    alt={product?.name}
-                                                    className="w-16 h-16 object-cover rounded"
-                                                />
-                                                <div>
-                                                    <p className="font-medium">{product?.name}</p>
-                                                    <p className="text-sm text-gray-600">
-                                                        Quantity: {item.quantity} × ${product?.price.toFixed(2)}
-                                                    </p>
-                                                </div>
+                                {order?.orderItems.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="flex justify-between items-center p-4 border rounded-lg"
+                                    >
+                                        <div className="flex items-center space-x-4">
+                                            <img
+                                                src={item.productImage}
+                                                alt={item.productName}
+                                                className="w-16 h-16 object-cover rounded"
+                                            />
+                                            <div>
+                                                <p className="font-medium">{item.productName}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    Quantity: {item.quantity} × ${item.unitPrice.toFixed(2)}
+                                                </p>
                                             </div>
-                                            <p className="font-bold">${(item.quantity * product?.price).toFixed(2)}</p>
                                         </div>
-                                    );
-                                })}
+                                        <p className="font-bold">${item.totalAmount.toFixed(2)}</p>
+                                    </div>
+                                ))}
                             </div>
 
                             {order?.shippingAddress && (
@@ -189,7 +174,7 @@ const OrderDetails = () => {
                                 <button
                                     onClick={handleDownloadInvoice}
                                     disabled={downloadingInvoice}
-                                    className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-yellow-900 text-white py-2 px-4 rounded-md hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {downloadingInvoice ? 'Downloading...' : 'Download Invoice'}
                                 </button>
