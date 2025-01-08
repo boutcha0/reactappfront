@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   const validateToken = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -35,23 +36,29 @@ export const AuthProvider = ({ children }) => {
   }, []); 
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userEmail = localStorage.getItem('userEmail');
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      const token = localStorage.getItem('authToken');
+      const userEmail = localStorage.getItem('userEmail');
 
-    if (token) {
-      // Validate token with backend
-      validateToken()
-        .then(isValid => {
+      if (token) {
+        try {
+          const isValid = await validateToken();
           if (isValid) {
             setIsAuthenticated(true);
             setUser({ email: userEmail });
           } else {
             logout();
           }
-        })
-        .catch(() => logout());
-    }
-  }, [validateToken]); 
+        } catch (error) {
+          logout();
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+  }, [validateToken]);
 
   const refreshToken = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -96,13 +103,13 @@ export const AuthProvider = ({ children }) => {
       login, 
       logout,
       validateToken,
-      refreshToken 
+      refreshToken,
+      isLoading // Expose loading state
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
 
 export const useAuth = () => {
   return useContext(AuthContext);

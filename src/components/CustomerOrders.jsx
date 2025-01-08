@@ -16,9 +16,9 @@ const CustomerOrders = () => {
         endDate: searchParams.get('endDate') || ''
     });
 
-    // Pagination state
-    const [page, setPage] = useState(0);
-    const [size, setSize] = useState(10);
+    // Initialize pagination state - size is now just a constant
+    const size = 10; // Fixed size, not from URL
+    const [page, setPage] = useState(parseInt(searchParams.get('page')) || 0);
     const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
@@ -31,17 +31,29 @@ const CustomerOrders = () => {
         }
     }, []);
 
+    // Update URL when pagination changes - removed size parameter
+    useEffect(() => {
+        const currentParams = Object.fromEntries(searchParams.entries());
+        setSearchParams({
+            ...currentParams,
+            page: page.toString()
+        });
+    }, [page]);
+
     useEffect(() => {
         if (customerId) {
             fetchOrders();
         }
-    }, [customerId, searchParams, page, size]); 
+    }, [customerId, searchParams]); 
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            let url = `http://localhost:8080/api/orders/info/${customerId}?page=${page}&size=${size}`;
+            const currentPage = searchParams.get('page') || '0';
             
+            let url = `http://localhost:8080/api/orders/info/${customerId}?page=${currentPage}&size=${size}`;
+            
+            // Add search parameters to URL if they exist
             const apiParams = new URLSearchParams();
             const orderId = searchParams.get('orderId');
             const startDate = searchParams.get('startDate');
@@ -64,6 +76,12 @@ const CustomerOrders = () => {
             const data = await response.json();
             setOrders(data.content);
             setTotalPages(data.totalPages);
+            
+            // Update page state from response if needed
+            const responseCurrentPage = Math.min(parseInt(currentPage), data.totalPages - 1);
+            if (responseCurrentPage !== page) {
+                setPage(responseCurrentPage);
+            }
         } catch (error) {
             setError(error.message);
             console.error('Error fetching orders:', error);
@@ -75,13 +93,18 @@ const CustomerOrders = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         
-        const params = new URLSearchParams();
+        // Preserve current pagination while updating search params
+        const params = new URLSearchParams(searchParams);
+        
+        // Reset to first page on new search
+        params.set('page', '0');
         
         if (searchState.orderId) params.set('orderId', searchState.orderId);
         if (searchState.startDate) params.set('startDate', searchState.startDate);
         if (searchState.endDate) params.set('endDate', searchState.endDate);
         
         setSearchParams(params);
+        setPage(0); // Reset page state
     };
 
     const handleFormChange = (e) => {
@@ -98,8 +121,23 @@ const CustomerOrders = () => {
             startDate: '',
             endDate: ''
         });
-        setSearchParams({});
+        
+        // Preserve only page parameter
+        setSearchParams({
+            page: '0'
+        });
+        setPage(0);
     };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            setPage(newPage);
+            const params = new URLSearchParams(searchParams);
+            params.set('page', newPage.toString());
+            setSearchParams(params);
+        }
+    };
+
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -255,11 +293,15 @@ const CustomerOrders = () => {
                     </div>
 
                     {/* Pagination Controls */}
-                    <div className="pagination-controls flex justify-between items-center py-4">
-                    <button
-                            onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 0))}
+                    <div className="flex justify-between items-center p-4 border-t border-gray-200">
+                        <button
+                            onClick={() => handlePageChange(page - 1)}
                             disabled={page === 0}
-                            className="bg-yellow-900 text-white px-6 py-2 rounded-md hover:bg-yellow-800 transition-colors duration-200"
+                            className={`px-4 py-2 border rounded-md ${
+                                page === 0 
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                    : 'bg-yellow-900 text-white hover:bg-yellow-800'
+                            }`}
                         >
                             Previous
                         </button>
@@ -267,9 +309,13 @@ const CustomerOrders = () => {
                             Page {page + 1} of {totalPages}
                         </span>
                         <button
-                            onClick={() => setPage((prevPage) => Math.min(prevPage + 1, totalPages - 1))}
-                            disabled={page === totalPages - 1}
-                            className="bg-yellow-900 text-white px-6 py-2 rounded-md hover:bg-yellow-800 transition-colors duration-200"
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page >= totalPages - 1}
+                            className={`px-4 py-2 border rounded-md ${
+                                page >= totalPages - 1
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-yellow-900 text-white hover:bg-yellow-800'
+                            }`}
                         >
                             Next
                         </button>
@@ -279,4 +325,5 @@ const CustomerOrders = () => {
         </div>
     );
 };
+
 export default CustomerOrders;
