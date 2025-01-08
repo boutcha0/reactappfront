@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cart from '../Cart';
 import { useAuth } from './AuthContext';
 
-export default function Navbar() {
+export default function Navbar({ onContactClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
@@ -56,7 +56,7 @@ export default function Navbar() {
   const navigation = [
     { name: 'Home', href: '/', current: location.pathname === '/' },
     { name: 'About', href: '/about', current: location.pathname === '/about' },
-    { name: 'Contact', onClick: () => {}, current: false },
+    { name: 'Contact', onClick: onContactClick, current: false },
   ];
 
   const classNames = (...classes) => classes.filter(Boolean).join(' ');

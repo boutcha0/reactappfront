@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const CustomerOrders = () => {
     const [orders, setOrders] = useState([]);
-    const [filteredOrders, setFilteredOrders] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [customerId, setCustomerId] = useState(null);
-    const [searchParams, setSearchParams] = useState({
-        orderId: '',
-        fromDate: '',
-        toDate: ''
-    });
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Initialize search state from URL parameters
+    const [searchState, setSearchState] = useState({
+        orderId: searchParams.get('orderId') || '',
+        startDate: searchParams.get('startDate') || '',
+        endDate: searchParams.get('endDate') || ''
+    });
+
+    // Pagination state
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
         const storedCustomerId = localStorage.getItem('userId');
@@ -28,33 +35,70 @@ const CustomerOrders = () => {
         if (customerId) {
             fetchOrders();
         }
-    }, [customerId]);
+    }, [customerId, searchParams, page, size]); 
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:8080/api/orders/info/${customerId}`);
+            let url = `http://localhost:8080/api/orders/info/${customerId}?page=${page}&size=${size}`;
+            
+            const apiParams = new URLSearchParams();
+            const orderId = searchParams.get('orderId');
+            const startDate = searchParams.get('startDate');
+            const endDate = searchParams.get('endDate');
+
+            if (orderId) apiParams.append('orderId', orderId);
+            if (startDate) apiParams.append('startDate', startDate);
+            if (endDate) apiParams.append('endDate', endDate);
+
+            if (apiParams.toString()) {
+                url += `&${apiParams.toString()}`;
+            }
+
+            const response = await fetch(url);
             
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('Failed to fetch orders');
             }
 
             const data = await response.json();
-            if (data && Array.isArray(data)) {
-                // Sort orders by ID in descending order
-                const sortedOrders = data.sort((a, b) => b.id - a.id);
-                setOrders(sortedOrders);
-                setFilteredOrders(sortedOrders);
-            } else {
-                setOrders([]);
-                setFilteredOrders([]);
-            }
+            setOrders(data.content);
+            setTotalPages(data.totalPages);
         } catch (error) {
             setError(error.message);
             console.error('Error fetching orders:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        
+        const params = new URLSearchParams();
+        
+        if (searchState.orderId) params.set('orderId', searchState.orderId);
+        if (searchState.startDate) params.set('startDate', searchState.startDate);
+        if (searchState.endDate) params.set('endDate', searchState.endDate);
+        
+        setSearchParams(params);
+    };
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setSearchState(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleClearFilters = () => {
+        setSearchState({
+            orderId: '',
+            startDate: '',
+            endDate: ''
+        });
+        setSearchParams({});
     };
 
     const formatDate = (dateString) => {
@@ -64,62 +108,6 @@ const CustomerOrders = () => {
             day: '2-digit',
             year: 'numeric'
         });
-    };
-
-    const filterOrders = () => {
-        let filtered = [...orders];
-
-        // Filter by order ID if provided
-        if (searchParams.orderId) {
-            filtered = filtered.filter(order => 
-                String(order.id).includes(searchParams.orderId)
-            );
-        }
-
-        // Filter by from date independently
-        if (searchParams.fromDate) {
-            const fromDate = new Date(searchParams.fromDate);
-            fromDate.setHours(0, 0, 0, 0);
-            filtered = filtered.filter(order => {
-                const orderDate = new Date(order.orderDate);
-                return orderDate >= fromDate;
-            });
-        }
-
-        // Filter by to date independently
-        if (searchParams.toDate) {
-            const toDate = new Date(searchParams.toDate);
-            toDate.setHours(23, 59, 59, 999);
-            filtered = filtered.filter(order => {
-                const orderDate = new Date(order.orderDate);
-                return orderDate <= toDate;
-            });
-        }
-
-        setFilteredOrders(filtered);
-    };
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        filterOrders();
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setSearchParams(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    // Remove date interdependency
-    const handleDateChange = (e) => {
-        const { name, value } = e.target;
-        setSearchParams(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        setError(null); // Clear any existing errors
     };
 
     if (loading) {
@@ -135,7 +123,7 @@ const CustomerOrders = () => {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-900">Order history</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">Order History</h2>
                     </div>
 
                     {/* Search Form */}
@@ -148,42 +136,49 @@ const CustomerOrders = () => {
                                 <input
                                     type="text"
                                     name="orderId"
-                                    value={searchParams.orderId}
-                                    onChange={handleInputChange}
+                                    value={searchState.orderId}
+                                    onChange={handleFormChange}
                                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                                     placeholder="Search by order number"
                                 />
                             </div>
                             <div className="flex-1 min-w-[200px]">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    From
+                                    Start Date
                                 </label>
                                 <input
                                     type="date"
-                                    name="fromDate"
-                                    value={searchParams.fromDate}
-                                    onChange={handleDateChange}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 appearance-none"
+                                    name="startDate"
+                                    value={searchState.startDate}
+                                    onChange={handleFormChange}
+                                    className="w-full border border-gray-300 rounded-md px-3 py-2"
                                 />
                             </div>
                             <div className="flex-1 min-w-[200px]">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    To
+                                    End Date
                                 </label>
                                 <input
                                     type="date"
-                                    name="toDate"
-                                    value={searchParams.toDate}
-                                    onChange={handleDateChange}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 appearance-none"
+                                    name="endDate"
+                                    value={searchState.endDate}
+                                    onChange={handleFormChange}
+                                    className="w-full border border-gray-300 rounded-md px-3 py-2"
                                 />
                             </div>
-                            <div className="flex items-end">
+                            <div className="flex items-end gap-2">
                                 <button
                                     type="submit"
-                                    className="bg-yellow-900 text-white px-6 py-2 rounded-md hover:bg-blue-800"
+                                    className="bg-yellow-900 text-white px-6 py-2 rounded-md hover:bg-yellow-800 transition-colors duration-200"
                                 >
                                     Search
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleClearFilters}
+                                    className="bg-gray-100 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-200 transition-colors duration-200"
+                                >
+                                    Clear
                                 </button>
                             </div>
                         </form>
@@ -194,7 +189,7 @@ const CustomerOrders = () => {
 
                     {/* Orders Table */}
                     <div className="overflow-x-auto">
-                        <table className="min-w-full">
+                        <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -215,14 +210,14 @@ const CustomerOrders = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredOrders.length === 0 ? (
+                                {orders.length === 0 ? (
                                     <tr>
                                         <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                                            No orders available for the selected criteria.
+                                            No orders found
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredOrders.map((order) => (
+                                    orders.map((order) => (
                                         <tr key={order.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {order.id}
@@ -244,10 +239,10 @@ const CustomerOrders = () => {
                                                     {order.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <button
                                                     onClick={() => navigate(`/orders/${order.id}`)}
-                                                    className="hover:text-blue-800"
+                                                    className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                                 >
                                                     View details
                                                 </button>
@@ -258,10 +253,30 @@ const CustomerOrders = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    <div className="pagination-controls flex justify-between items-center py-4">
+                    <button
+                            onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 0))}
+                            disabled={page === 0}
+                            className="bg-yellow-900 text-white px-6 py-2 rounded-md hover:bg-yellow-800 transition-colors duration-200"
+                        >
+                            Previous
+                        </button>
+                        <span className="text-sm text-gray-700">
+                            Page {page + 1} of {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setPage((prevPage) => Math.min(prevPage + 1, totalPages - 1))}
+                            disabled={page === totalPages - 1}
+                            className="bg-yellow-900 text-white px-6 py-2 rounded-md hover:bg-yellow-800 transition-colors duration-200"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
-
 export default CustomerOrders;

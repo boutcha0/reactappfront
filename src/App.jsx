@@ -4,12 +4,12 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Navbar from './components/Shared/Navbar';
-import Contact from './pages/Contact';
+import Contact from './pages/Contact';  
 import About from './pages/About';
 import CheckoutPage from './components/CheckoutPage';
 import CustomerOrders from './components/CustomerOrders';
 import OrderDetails from './components/OrderDetails';
-import { AuthProvider } from '../src/components/Shared/AuthContext';
+import { AuthProvider } from './components/Shared/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
 const App = () => {
@@ -66,14 +66,6 @@ const App = () => {
             } 
           />
           <Route 
-            path="/contact" 
-            element={
-              <ProtectedRoute>
-                <About />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
             path="/checkout" 
             element={
               <ProtectedRoute>
@@ -81,7 +73,6 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
-          {/* Updated Orders Routes */}
           <Route 
             path="/orders" 
             element={
