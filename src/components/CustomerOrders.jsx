@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 
 const CustomerOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -8,18 +9,14 @@ const CustomerOrders = () => {
     const [customerId, setCustomerId] = useState(null);
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-
-    // Initialize search state from URL parameters
-    const [searchState, setSearchState] = useState({
-        orderId: searchParams.get('orderId') || '',
-        startDate: searchParams.get('startDate') || '',
-        endDate: searchParams.get('endDate') || ''
-    });
-
-    // Initialize pagination state - size is now just a constant
-    const size = 10; // Fixed size, not from URL
-    const [page, setPage] = useState(parseInt(searchParams.get('page')) || 0);
     const [totalPages, setTotalPages] = useState(0);
+    const size = 10;
+
+    // Convert frontend page (1-based) to backend page (0-based)
+    const getBackendPage = (frontendPage) => Math.max(0, parseInt(frontendPage || '1') - 1);
+    
+    // Get current frontend page from URL or default to 1
+    const currentFrontendPage = parseInt(searchParams.get('page') || '1');
 
     useEffect(() => {
         const storedCustomerId = localStorage.getItem('userId');
@@ -31,81 +28,81 @@ const CustomerOrders = () => {
         }
     }, []);
 
-    // Update URL when pagination changes - removed size parameter
-    useEffect(() => {
-        const currentParams = Object.fromEntries(searchParams.entries());
-        setSearchParams({
-            ...currentParams,
-            page: page.toString()
-        });
-    }, [page]);
-
     useEffect(() => {
         if (customerId) {
             fetchOrders();
         }
-    }, [customerId, searchParams]); 
+    }, [customerId, searchParams]);
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            const currentPage = searchParams.get('page') || '0';
             
-            let url = `http://localhost:8080/api/orders/info/${customerId}?page=${currentPage}&size=${size}`;
-            
-            // Add search parameters to URL if they exist
-            const apiParams = new URLSearchParams();
-            const orderId = searchParams.get('orderId');
-            const startDate = searchParams.get('startDate');
-            const endDate = searchParams.get('endDate');
+            // Create query params for backend
+            const backendQuery = {
+                ...Object.fromEntries(searchParams.entries()),
+                page: getBackendPage(searchParams.get('page')),
+                size
+            };
 
-            if (orderId) apiParams.append('orderId', orderId);
-            if (startDate) apiParams.append('startDate', startDate);
-            if (endDate) apiParams.append('endDate', endDate);
+            const response = await axios.get(
+                `http://localhost:8080/api/orders/info/${customerId}`,
+                { params: backendQuery }
+            );
 
-            if (apiParams.toString()) {
-                url += `&${apiParams.toString()}`;
-            }
+            setOrders(response.data.content);
+            setTotalPages(response.data.totalPages);
 
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch orders');
-            }
-
-            const data = await response.json();
-            setOrders(data.content);
-            setTotalPages(data.totalPages);
-            
-            // Update page state from response if needed
-            const responseCurrentPage = Math.min(parseInt(currentPage), data.totalPages - 1);
-            if (responseCurrentPage !== page) {
-                setPage(responseCurrentPage);
+            // Ensure frontend page is within valid range
+            const maxFrontendPage = response.data.totalPages;
+            if (currentFrontendPage > maxFrontendPage) {
+                updateSearchParams({ page: maxFrontendPage.toString() });
             }
         } catch (error) {
-            setError(error.message);
+            setError(error.response?.data?.message || 'Failed to fetch orders');
             console.error('Error fetching orders:', error);
         } finally {
             setLoading(false);
         }
     };
 
+    const updateSearchParams = (updates) => {
+        const newParams = new URLSearchParams(searchParams);
+        
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                newParams.set(key, value);
+            } else {
+                newParams.delete(key);
+            }
+        });
+
+        setSearchParams(newParams);
+    };
+
     const handleSearch = (e) => {
         e.preventDefault();
         
-        // Preserve current pagination while updating search params
-        const params = new URLSearchParams(searchParams);
-        
-        // Reset to first page on new search
-        params.set('page', '0');
-        
-        if (searchState.orderId) params.set('orderId', searchState.orderId);
-        if (searchState.startDate) params.set('startDate', searchState.startDate);
-        if (searchState.endDate) params.set('endDate', searchState.endDate);
-        
-        setSearchParams(params);
-        setPage(0); // Reset page state
+        const newParams = {
+            orderId: searchState.orderId || '',
+            startDate: searchState.startDate || '',
+            endDate: searchState.endDate || '',
+            page: '1' // Reset to page 1 on new search
+        };
+
+        // Remove empty values
+        Object.keys(newParams).forEach(key => 
+            !newParams[key] && delete newParams[key]
+        );
+
+        setSearchParams(newParams);
     };
+
+    const [searchState, setSearchState] = useState({
+        orderId: searchParams.get('orderId') || '',
+        startDate: searchParams.get('startDate') || '',
+        endDate: searchParams.get('endDate') || ''
+    });
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
@@ -121,23 +118,17 @@ const CustomerOrders = () => {
             startDate: '',
             endDate: ''
         });
-        
-        // Preserve only page parameter
-        setSearchParams({
-            page: '0'
-        });
-        setPage(0);
+        setSearchParams({ page: '1' });
     };
 
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
-            const params = new URLSearchParams(searchParams);
-            params.set('page', newPage.toString());
-            setSearchParams(params);
+    const handlePageChange = (newFrontendPage) => {
+        if (newFrontendPage >= 1 && newFrontendPage <= totalPages) {
+            updateSearchParams({
+                ...Object.fromEntries(searchParams.entries()),
+                page: newFrontendPage.toString()
+            });
         }
     };
-
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -295,10 +286,10 @@ const CustomerOrders = () => {
                     {/* Pagination Controls */}
                     <div className="flex justify-between items-center p-4 border-t border-gray-200">
                         <button
-                            onClick={() => handlePageChange(page - 1)}
-                            disabled={page === 0}
+                            onClick={() => handlePageChange(currentFrontendPage - 1)}
+                            disabled={currentFrontendPage === 1}
                             className={`px-4 py-2 border rounded-md ${
-                                page === 0 
+                                currentFrontendPage === 1
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                     : 'bg-yellow-900 text-white hover:bg-yellow-800'
                             }`}
@@ -306,13 +297,13 @@ const CustomerOrders = () => {
                             Previous
                         </button>
                         <span className="text-sm text-gray-700">
-                            Page {page + 1} of {totalPages}
+                            Page {currentFrontendPage} of {totalPages}
                         </span>
                         <button
-                            onClick={() => handlePageChange(page + 1)}
-                            disabled={page >= totalPages - 1}
+                            onClick={() => handlePageChange(currentFrontendPage + 1)}
+                            disabled={currentFrontendPage >= totalPages}
                             className={`px-4 py-2 border rounded-md ${
-                                page >= totalPages - 1
+                                currentFrontendPage >= totalPages
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-yellow-900 text-white hover:bg-yellow-800'
                             }`}
