@@ -10,7 +10,6 @@ const CustomerOrders = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [totalPages, setTotalPages] = useState(0);
-    const size = 10;
 
     // Convert frontend page (1-based) to backend page (0-based)
     const getBackendPage = (frontendPage) => Math.max(0, parseInt(frontendPage || '1') - 1);
@@ -41,8 +40,7 @@ const CustomerOrders = () => {
             // Create query params for backend
             const backendQuery = {
                 ...Object.fromEntries(searchParams.entries()),
-                page: getBackendPage(searchParams.get('page')),
-                size
+                page: getBackendPage(searchParams.get('page'))
             };
 
             const response = await axios.get(
