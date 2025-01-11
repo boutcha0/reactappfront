@@ -8,7 +8,7 @@ export default function Navbar({ onContactClick }) {
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
   const [cartCount, setCartCount] = useState(null);
-  const { logout } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
 
   const hiddenRoutes = ['/login', '/register'];
   const shouldHideNavbar = hiddenRoutes.includes(location.pathname);
@@ -105,37 +105,41 @@ export default function Navbar({ onContactClick }) {
                 )
               ))}
 
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                Logout
-              </button>
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Orders Icon */}
-            <button
-              onClick={() => navigate('/orders')}
-              className="relative p-2 text-gray-300 hover:text-white"
-              aria-label="View Orders"
-            >
-              <svg
-                className="w-6 h-6"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {/* Orders Icon - Only show if authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={() => navigate('/orders')}
+                className="relative p-2 text-gray-300 hover:text-white"
+                aria-label="View Orders"
               >
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-            </button>
+                <svg
+                  className="w-6 h-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+              </button>
+            )}
 
             {/* Cart Icon */}
             <button

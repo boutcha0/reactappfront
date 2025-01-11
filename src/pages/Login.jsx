@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/Shared/AuthContext';
 
 const Login = () => {
@@ -8,7 +8,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -42,16 +41,13 @@ const Login = () => {
           id: data.userId
         });
         
-        // Check if there's a redirect path from protected route
-        const redirectTo = location.state?.from?.pathname || '/';
-        
-        // Check if user was trying to checkout
+        // Navigate based on checkout state
         const checkoutAfterLogin = localStorage.getItem('checkoutAfterLogin');
         if (checkoutAfterLogin) {
           localStorage.removeItem('checkoutAfterLogin');
           navigate('/checkout');
         } else {
-          navigate(redirectTo);
+          navigate('/'); // Always redirect to home for new accounts
         }
       } else {
         setError(data.message || 'Login failed');
