@@ -7,22 +7,26 @@ export default function Navbar({ onContactClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
-  const [cartCount, setCartCount] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
   const { logout, isAuthenticated } = useAuth();
 
   const hiddenRoutes = ['/login', '/register'];
   const shouldHideNavbar = hiddenRoutes.includes(location.pathname);
 
   useEffect(() => {
-    const updateCartCount = (event) => {
-      const items = event?.detail?.items || JSON.parse(localStorage.getItem('cartItems') || '[]');
-      const uniqueItemCount = items.length;
-      setCartCount(uniqueItemCount > 0 ? uniqueItemCount : null);
+    const updateCartCount = () => {
+      const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      setCartCount(cartItems.length);
     };
-    
+
     updateCartCount();
+    window.addEventListener('storage', updateCartCount);
     window.addEventListener('cartUpdate', updateCartCount);
-    return () => window.removeEventListener('cartUpdate', updateCartCount);
+
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cartUpdate', updateCartCount);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -44,6 +48,7 @@ export default function Navbar({ onContactClick }) {
       }
 
       localStorage.removeItem('cartItems');
+      setCartCount(0);
       logout();
       navigate('/login');
     } catch (error) {
@@ -117,7 +122,6 @@ export default function Navbar({ onContactClick }) {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Orders Icon - Only show if authenticated */}
             {isAuthenticated && (
               <button
                 onClick={() => navigate('/orders')}
@@ -141,7 +145,6 @@ export default function Navbar({ onContactClick }) {
               </button>
             )}
 
-            {/* Cart Icon */}
             <button
               onClick={() => setShowCart(!showCart)}
               className="relative p-2 text-gray-300 hover:text-white"
@@ -159,7 +162,7 @@ export default function Navbar({ onContactClick }) {
                   />
                 </g>
               </svg>
-              {cartCount !== null && (
+              {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {cartCount}
                 </span>
