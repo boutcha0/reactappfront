@@ -11,11 +11,8 @@ const CustomerOrders = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [totalPages, setTotalPages] = useState(0);
 
-    // Convert frontend page (1-based) to backend page (0-based)
-    const getBackendPage = (frontendPage) => Math.max(0, parseInt(frontendPage || '1') - 1);
-    
-    // Get current frontend page from URL or default to 1
     const currentFrontendPage = parseInt(searchParams.get('page') || '1');
+    const getBackendPage = (frontendPage) => Math.max(0, parseInt(frontendPage || '1') - 1);
 
     useEffect(() => {
         const storedCustomerId = localStorage.getItem('userId');
@@ -36,8 +33,6 @@ const CustomerOrders = () => {
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            
-            // Create query params for backend
             const backendQuery = {
                 ...Object.fromEntries(searchParams.entries()),
                 page: getBackendPage(searchParams.get('page'))
@@ -51,7 +46,6 @@ const CustomerOrders = () => {
             setOrders(response.data.content);
             setTotalPages(response.data.totalPages);
 
-            // Ensure frontend page is within valid range
             const maxFrontendPage = response.data.totalPages;
             if (currentFrontendPage > maxFrontendPage) {
                 updateSearchParams({ page: maxFrontendPage.toString() });
@@ -66,7 +60,6 @@ const CustomerOrders = () => {
 
     const updateSearchParams = (updates) => {
         const newParams = new URLSearchParams(searchParams);
-        
         Object.entries(updates).forEach(([key, value]) => {
             if (value) {
                 newParams.set(key, value);
@@ -74,21 +67,20 @@ const CustomerOrders = () => {
                 newParams.delete(key);
             }
         });
-
         setSearchParams(newParams);
     };
 
     const handleSearch = (e) => {
         e.preventDefault();
+        const formData = new FormData(e.target);
         
         const newParams = {
-            orderId: searchState.orderId || '',
-            startDate: searchState.startDate || '',
-            endDate: searchState.endDate || '',
-            page: '1' // Reset to page 1 on new search
+            orderId: formData.get('orderId'),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            page: '1'
         };
 
-        // Remove empty values
         Object.keys(newParams).forEach(key => 
             !newParams[key] && delete newParams[key]
         );
@@ -96,26 +88,7 @@ const CustomerOrders = () => {
         setSearchParams(newParams);
     };
 
-    const [searchState, setSearchState] = useState({
-        orderId: searchParams.get('orderId') || '',
-        startDate: searchParams.get('startDate') || '',
-        endDate: searchParams.get('endDate') || ''
-    });
-
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setSearchState(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
     const handleClearFilters = () => {
-        setSearchState({
-            orderId: '',
-            startDate: '',
-            endDate: ''
-        });
         setSearchParams({ page: '1' });
     };
 
@@ -153,7 +126,6 @@ const CustomerOrders = () => {
                         <h2 className="text-2xl font-bold text-gray-900">Order History</h2>
                     </div>
 
-                    {/* Search Form */}
                     <div className="p-6 border-b border-gray-200">
                         <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
                             <div className="flex-1 min-w-[200px]">
@@ -163,8 +135,7 @@ const CustomerOrders = () => {
                                 <input
                                     type="text"
                                     name="orderId"
-                                    value={searchState.orderId}
-                                    onChange={handleFormChange}
+                                    defaultValue={searchParams.get('orderId') || ''}
                                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                                     placeholder="Search by order number"
                                 />
@@ -176,8 +147,7 @@ const CustomerOrders = () => {
                                 <input
                                     type="date"
                                     name="startDate"
-                                    value={searchState.startDate}
-                                    onChange={handleFormChange}
+                                    defaultValue={searchParams.get('startDate') || ''}
                                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                                 />
                             </div>
@@ -188,8 +158,7 @@ const CustomerOrders = () => {
                                 <input
                                     type="date"
                                     name="endDate"
-                                    value={searchState.endDate}
-                                    onChange={handleFormChange}
+                                    defaultValue={searchParams.get('endDate') || ''}
                                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                                 />
                             </div>
@@ -214,7 +183,6 @@ const CustomerOrders = () => {
                         )}
                     </div>
 
-                    {/* Orders Table */}
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
@@ -281,7 +249,6 @@ const CustomerOrders = () => {
                         </table>
                     </div>
 
-                    {/* Pagination Controls */}
                     <div className="flex justify-between items-center p-4 border-t border-gray-200">
                         <button
                             onClick={() => handlePageChange(currentFrontendPage - 1)}
