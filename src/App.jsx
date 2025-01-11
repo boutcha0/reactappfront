@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -49,22 +49,8 @@ const App = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <Home addToCart={addToCart} />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/about" 
-            element={
-              <ProtectedRoute>
-                <About />
-              </ProtectedRoute>
-            } 
-          />
+          <Route path="/" element={<Home addToCart={addToCart} />} />
+          <Route path="/about" element={<About />} />
           <Route 
             path="/checkout" 
             element={
@@ -89,7 +75,6 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
-          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
