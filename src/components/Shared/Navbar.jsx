@@ -110,13 +110,28 @@ export default function Navbar({ onContactClick }) {
                 )
               ))}
 
-              {isAuthenticated && (
+              {isAuthenticated ? (
                 <button
                   onClick={handleLogout}
                   className="bg-red-600 hover:bg-red-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
                 >
                   Logout
                 </button>
+              ) : (
+                <div className="flex space-x-2">
+                  <Link
+                    to="/login"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
+                  >
+                    Register
+                  </Link>
+                </div>
               )}
             </div>
           </div>
