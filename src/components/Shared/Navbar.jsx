@@ -50,11 +50,11 @@ export default function Navbar({ onContactClick }) {
       localStorage.removeItem('cartItems');
       setCartCount(0);
       logout();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
       logout();
-      navigate('/login');
+      navigate('/');
     }
   };
 
@@ -121,13 +121,13 @@ export default function Navbar({ onContactClick }) {
                 <div className="flex space-x-2">
                   <Link
                     to="/login"
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
+                    className="bg-blue-900 hover:bg-blue-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="bg-green-600 hover:bg-green-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
+                    className="bg-purple-900 hover:bg-purle-700 text-white rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200"
                   >
                     Register
                   </Link>
