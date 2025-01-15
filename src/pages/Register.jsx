@@ -47,7 +47,7 @@ const Register = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="w-full max-w-md p-8 bg-white shadow-md rounded-md">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Register for Skylark</h2>
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Register for Dickies Store</h2>
 
         {message && <p className="mb-4 text-green-500 text-center">{message}</p>}
         {error && <p className="mb-4 text-red-500 text-center">{error}</p>}

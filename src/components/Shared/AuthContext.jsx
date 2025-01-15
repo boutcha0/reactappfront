@@ -8,8 +8,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeAuth = async () => {
       const token = localStorage.getItem('authToken');
+      
       if (token) {
         try {
           const response = await fetch('http://localhost:8080/api/auth/verify', {
@@ -17,34 +18,31 @@ export const AuthProvider = ({ children }) => {
               'Authorization': `Bearer ${token}`
             }
           });
+          
           if (response.ok) {
+            setIsAuthenticated(true);
             const userData = await response.json();
             setUser(userData);
-            setIsAuthenticated(true);
           } else {
             localStorage.removeItem('authToken');
             setIsAuthenticated(false);
-            setUser(null);
           }
         } catch (error) {
           console.error('Auth verification error:', error);
-          setIsAuthenticated(false);
-          setUser(null);
+          setIsAuthenticated(true);
         }
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
       }
+      
       setIsLoading(false);
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
 
-  const login = async (token, userData) => {
+  const login = (token, userData) => {
     localStorage.setItem('authToken', token);
-    setUser(userData);
     setIsAuthenticated(true);
+    setUser(userData);
   };
 
   const logout = () => {

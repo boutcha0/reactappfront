@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import OrderNotFound from './OrderNotFound';
 
 const OrderDetails = () => {
     const [order, setOrder] = useState(null);
@@ -15,9 +16,14 @@ const OrderDetails = () => {
             try {
                 setLoading(true);
                 const response = await fetch(`http://localhost:8080/api/orders/${orderId}`);
-
+                
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    if (response.status === 404) {
+                        setError('not_found');
+                    } else {
+                        throw new Error('Network response was not ok');
+                    }
+                    return;
                 }
 
                 const data = await response.json();
@@ -70,6 +76,10 @@ const OrderDetails = () => {
                 <p className="text-lg">Loading order details...</p>
             </div>
         );
+    }
+
+    if (error === 'not_found') {
+        return <OrderNotFound orderId={orderId} />;
     }
 
     if (error) {
