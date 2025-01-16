@@ -16,7 +16,6 @@ const OrderDetails = () => {
         const fetchOrderDetails = async () => {
             try {
                 setLoading(true);
-                // Validate orderId is numeric
                 if (!orderId.match(/^\d+$/)) {
                     setError('invalid_id');
                     return;

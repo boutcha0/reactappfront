@@ -25,18 +25,15 @@ const Login = () => {
 
       const { token, userId } = response.data;
 
-      // Save to localStorage
       localStorage.setItem('userEmail', email);
       localStorage.setItem('authToken', token);
       localStorage.setItem('userId', userId);
 
-      // Use login context
       await login(token, {
         email,
         id: userId,
       });
 
-      // Redirect logic
       const params = new URLSearchParams(location.search);
       const redirectPath = params.get('redirect');
 
