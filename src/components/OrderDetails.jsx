@@ -103,7 +103,7 @@ const OrderDetails = () => {
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-4xl mx-auto px-4">
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate('/orders')}
                     className="flex items-center space-x-2 mb-4 text-gray-600 hover:text-gray-900"
                 >
                     <svg 

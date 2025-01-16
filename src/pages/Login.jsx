@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../components/Shared/AuthContext';
 
 const Login = () => {
@@ -15,50 +16,45 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-  
+
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email,  
-          password 
-        }),
+      const response = await axios.post('http://localhost:8080/api/auth/login', {
+        email,
+        password,
       });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('userId', data.userId);
-        
-        await login(data.token, {
-          email: email,
-          id: data.userId
-        });
-        
-        const params = new URLSearchParams(location.search);
-        const redirectPath = params.get('redirect');
-        
-        if (redirectPath) {
-          navigate(redirectPath);
-        } else {
-          const savedRedirect = localStorage.getItem('redirectAfterLogin');
-          if (savedRedirect) {
-            localStorage.removeItem('redirectAfterLogin');
-            navigate(savedRedirect);
-          } else {
-            navigate('/');
-          }
-        }
+
+      const { token, userId } = response.data;
+
+      // Save to localStorage
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userId', userId);
+
+      // Use login context
+      await login(token, {
+        email,
+        id: userId,
+      });
+
+      // Redirect logic
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+
+      if (redirectPath) {
+        navigate(redirectPath);
       } else {
-        setError(data.message || 'Login failed');
+        const savedRedirect = localStorage.getItem('redirectAfterLogin');
+        if (savedRedirect) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(savedRedirect);
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
-      setError('Something went wrong. Please try again later.');
+      setError(
+        err.response?.data?.message || 'Something went wrong. Please try again later.'
+      );
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -108,15 +104,15 @@ const Login = () => {
           </div>
 
           <div className="flex justify-between items-center mb-4">
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="text-sm text-yellow-800 hover:text-yellow-900 hover:underline"
               tabIndex={isLoading ? -1 : 0}
             >
               Create an account
             </Link>
           </div>
-          
+
           <button
             type="submit"
             disabled={isLoading}
