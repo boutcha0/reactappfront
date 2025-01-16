@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './components/Shared/AuthContext';
-import AuthRequired from './components/Shared/AuthRequired';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -16,13 +15,13 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Special handling for checkout path
-    if (location.pathname === '/checkout') {
-      localStorage.setItem('checkoutAfterLogin', 'true');
-    } else {
-      localStorage.setItem('redirectAfterLogin', location.pathname);
+    // Special handling for /orders route
+    if (location.pathname === '/orders') {
+      return <Navigate to="/auth-required" replace />;
     }
-    return <AuthRequired />;
+    
+    // For other protected routes, redirect to login with return URL
+    return <Navigate to={`/login?redirect=${location.pathname}`} replace />;
   }
 
   return children;

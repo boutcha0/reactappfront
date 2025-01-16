@@ -11,6 +11,8 @@ import CustomerOrders from './components/CustomerOrders';
 import OrderDetails from './components/OrderDetails';
 import { AuthProvider } from './components/Shared/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
+import AuthRequired from './components/Shared/AuthRequired';
+import NotFound from './components/NotFound';
 
 const App = () => {
   const [cart, setCart] = useState([]);
@@ -51,6 +53,8 @@ const App = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<Home addToCart={addToCart} />} />
           <Route path="/about" element={<About />} />
+          <Route path="/auth-required" element={<AuthRequired />} />
+
           <Route 
             path="/checkout" 
             element={
@@ -75,6 +79,8 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </AuthProvider>

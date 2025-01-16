@@ -47,12 +47,20 @@ const OrderNotFound = ({ orderId }) => {
           <p className="text-gray-600 mb-6">
             We couldn't find the order with ID: {orderId}. Please check if the order ID is correct.
           </p>
-          <button
-            onClick={() => navigate('/orders')}
-            className="bg-yellow-900 text-white py-2 px-6 rounded-md hover:bg-black transition-colors"
-          >
-            View All Orders
-          </button>
+          <div className="space-y-4">
+            <button
+              onClick={() => navigate('/orders')}
+              className="w-full bg-yellow-900 text-white py-2 px-6 rounded-md hover:bg-black transition-colors"
+            >
+              View All Orders
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full bg-gray-100 text-gray-700 py-2 px-6 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     </div>

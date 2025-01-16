@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../components/Shared/AuthContext';
 
 const Login = () => {
@@ -8,6 +8,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -39,12 +40,19 @@ const Login = () => {
           id: data.userId
         });
         
-        const checkoutAfterLogin = localStorage.getItem('checkoutAfterLogin');
-        if (checkoutAfterLogin) {
-          localStorage.removeItem('checkoutAfterLogin');
-          navigate('/checkout');
+        const params = new URLSearchParams(location.search);
+        const redirectPath = params.get('redirect');
+        
+        if (redirectPath) {
+          navigate(redirectPath);
         } else {
-          navigate('/'); // Always redirect to home for new accounts
+          const savedRedirect = localStorage.getItem('redirectAfterLogin');
+          if (savedRedirect) {
+            localStorage.removeItem('redirectAfterLogin');
+            navigate(savedRedirect);
+          } else {
+            navigate('/');
+          }
         }
       } else {
         setError(data.message || 'Login failed');

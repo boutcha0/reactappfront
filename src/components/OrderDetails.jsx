@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import OrderNotFound from './OrderNotFound';
+import NotFound from './NotFound';
 
 const OrderDetails = () => {
     const [order, setOrder] = useState(null);
@@ -15,13 +16,21 @@ const OrderDetails = () => {
         const fetchOrderDetails = async () => {
             try {
                 setLoading(true);
+                // Validate orderId is numeric
+                if (!orderId.match(/^\d+$/)) {
+                    setError('invalid_id');
+                    return;
+                }
+
                 const response = await fetch(`http://localhost:8080/api/orders/${orderId}`);
                 
                 if (!response.ok) {
                     if (response.status === 404) {
                         setError('not_found');
+                    } else if (response.status === 401 || response.status === 403) {
+                        setError('unauthorized');
                     } else {
-                        throw new Error('Network response was not ok');
+                        throw new Error('Network error occurred');
                     }
                     return;
                 }
@@ -29,7 +38,7 @@ const OrderDetails = () => {
                 const data = await response.json();
                 setOrder(data);
             } catch (error) {
-                setError(error.message);
+                setError('network_error');
                 console.error('Error fetching order details:', error);
             } finally {
                 setLoading(false);
@@ -73,7 +82,10 @@ const OrderDetails = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
-                <p className="text-lg">Loading order details...</p>
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-yellow-800 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-lg text-gray-600">Loading order details...</p>
+                </div>
             </div>
         );
     }
@@ -82,13 +94,10 @@ const OrderDetails = () => {
         return <OrderNotFound orderId={orderId} />;
     }
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
-                <p className="text-lg text-red-600">Error: {error}</p>
-            </div>
-        );
+    if (error === 'invalid_id' || error === 'unauthorized') {
+        return <NotFound />;
     }
+
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">

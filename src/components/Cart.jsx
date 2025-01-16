@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from './Shared/AuthContext'; 
+import { useAuth } from './Shared/AuthContext';
 
 const Cart = ({ isVisible, onClose }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -8,7 +8,7 @@ const Cart = ({ isVisible, onClose }) => {
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
   const [orderProcessing] = useState(false);
-  const [showAuthMessage, setShowAuthMessage] = useState(false); 
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
@@ -49,7 +49,7 @@ const Cart = ({ isVisible, onClose }) => {
   useEffect(() => {
     if (isVisible) {
       loadCartItems();
-      setShowAuthMessage(false); 
+      setShowAuthMessage(false);
     }
   }, [isVisible, loadCartItems]);
 
@@ -182,7 +182,7 @@ const Cart = ({ isVisible, onClose }) => {
             {showAuthMessage && !isAuthenticated && (
               <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
                 <p className="text-sm text-yellow-800">
-                  Please <Link to="/login" className="font-medium text-yellow-900 underline" onClick={onClose}>
+                  Please <Link to="/login?redirect=/checkout" className="font-medium text-yellow-900 underline" onClick={onClose}>
                     login
                   </Link> to complete your purchase
                 </p>
