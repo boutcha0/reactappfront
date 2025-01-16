@@ -15,13 +15,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Special handling for /orders route
-    if (location.pathname === '/orders') {
-      return <Navigate to="/auth-required" replace />;
-    }
-    
-    // For other protected routes, redirect to login with return URL
-    return <Navigate to={`/login?redirect=${location.pathname}`} replace />;
+    return <Navigate to={`/auth-required?redirect=${location.pathname}`} replace />;
   }
 
   return children;

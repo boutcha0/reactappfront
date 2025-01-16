@@ -4,6 +4,11 @@ import { Link, useLocation } from 'react-router-dom';
 const AuthRequired = () => {
   const location = useLocation();
 
+  // Extract the actual target path, avoiding an infinite loop
+  const params = new URLSearchParams(location.search);
+  const originalRedirect = params.get('redirect') || '/';
+  const redirectPath = originalRedirect === '/auth-required' ? '/' : originalRedirect;
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-orange-100 to-gray-300 flex items-center justify-center">
       <div className="bg-white p-8 rounded-md shadow-lg w-full max-w-md text-center">
@@ -13,7 +18,7 @@ const AuthRequired = () => {
         </p>
         <div className="space-y-4">
           <Link
-            to={`/login?redirect=${location.pathname}`}
+            to={`/login?redirect=${redirectPath}`}
             className="block w-full bg-yellow-800 text-white py-2 px-4 rounded-md hover:bg-yellow-900 transition duration-300"
           >
             Log In
