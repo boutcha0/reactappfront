@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 const AuthRequired = () => {
   const location = useLocation();
 
-  // Extract the actual target path, avoiding an infinite loop
   const params = new URLSearchParams(location.search);
   const originalRedirect = params.get('redirect') || '/';
   const redirectPath = originalRedirect === '/auth-required' ? '/' : originalRedirect;
