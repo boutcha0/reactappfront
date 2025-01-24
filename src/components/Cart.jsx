@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './Shared/AuthContext';
+import axios from 'axios';
 
 const Cart = ({ isVisible, onClose }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -16,9 +17,8 @@ const Cart = ({ isVisible, onClose }) => {
 
   const fetchProductDetails = async (productId) => {
     try {
-      const response = await fetch(`${API_URL}/api/products/${productId}`);
-      if (!response.ok) throw new Error('Failed to fetch product details');
-      return await response.json();
+      const response = await axios.get(`${API_URL}/api/products/${productId}`);
+      return response.data;
     } catch (error) {
       console.error('Error fetching product:', error);
       throw error;

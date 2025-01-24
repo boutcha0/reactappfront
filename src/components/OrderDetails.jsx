@@ -21,24 +21,24 @@ const OrderDetails = () => {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:8080/api/orders/${orderId}`);
-                
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        setError('not_found');
-                    } else if (response.status === 401 || response.status === 403) {
-                        setError('unauthorized');
-                    } else {
-                        throw new Error('Network error occurred');
+                const response = await axios.get(`http://localhost:8080/api/orders/${orderId}`, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`
                     }
-                    return;
-                }
-
-                const data = await response.json();
-                setOrder(data);
+                });
+                
+                setOrder(response.data);
             } catch (error) {
-                setError('network_error');
-                console.error('Error fetching order details:', error);
+                if (error.response) {
+                    if (error.response.status === 404) {
+                        setError('not_found');
+                    } else if (error.response.status === 401 || error.response.status === 403) {
+                        setError('unauthorized');
+                    }
+                } else {
+                    setError('network_error');
+                    console.error('Error fetching order details:', error);
+                }
             } finally {
                 setLoading(false);
             }
@@ -96,7 +96,6 @@ const OrderDetails = () => {
     if (error === 'invalid_id' || error === 'unauthorized') {
         return <NotFound />;
     }
-
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
